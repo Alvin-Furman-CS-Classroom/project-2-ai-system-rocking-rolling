@@ -24,7 +24,7 @@ Users specify source and destination tracks (or moods). The system encodes music
 
 ### Module 2: Optimal Path Search
 
-**Topics:** Search Algorithms (A* Search, Heuristics, Informed Search)
+**Topics:** Search Algorithms (Beam Search)
 
 **Input:** Source track feature vector (71-dimensional), destination track feature vector (71-dimensional), knowledge base rules from Module 1, playlist length parameter (default: 7 tracks including bookends).
 
@@ -34,7 +34,7 @@ Users specify source and destination tracks (or moods). The system encodes music
 
 **Prerequisites:** Search content (Weeks 2.5-4). Requires Module 1 (KB must exist to evaluate path validity).
 
-**Algorithm Details:** Search space is continuous 71-dimensional feature space discretized into grid cells. Heuristic function: Euclidean distance to destination weighted by KB rule violation penalties. Cost function: Cumulative distance plus transition smoothness penalty derived from feature delta magnitudes.
+**Algorithm Details:** Search space is continuous 71-dimensional feature space discretized into grid cells. Heuristic function: Euclidean distance to destination weighted by KB rule violation penalties. Cost function: Cumulative distance plus transition smoothness penalty derived from feature delta magnitudes. Beam search is used to efficiently explore the search space by maintaining a limited number of promising paths. It is constrained to ensure a minimum playlist length as specified by the user.
 
 ### Module 3: Playlist Optimization via Simulated Annealing
 
