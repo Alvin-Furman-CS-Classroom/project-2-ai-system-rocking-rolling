@@ -1,0 +1,19 @@
+version = 1
+revision = 3
+requires-python = ">=3.13"
+
+[manifest]
+members = [
+    "module1",
+    "wave-guide",
+]
+
+[[package]]
+name = "module1"
+version = "0.1.0"
+source = { virtual = "modules/module1" }
+
+[[package]]
+name = "wave-guide"
+version = "0.1.0"
+source = { virtual = "." }
