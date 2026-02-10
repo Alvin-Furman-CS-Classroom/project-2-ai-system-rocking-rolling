@@ -125,19 +125,30 @@ def is_double_time(bpm1: float, bpm2: float, tolerance: float = 5.0) -> bool:
     return False
 
 
-def mfcc_distance(mfcc1: list[float] | None, mfcc2: list[float] | None) -> float | None:
+def mfcc_distance(
+    mfcc1: list[float] | None,
+    mfcc2: list[float] | None,
+    cov1: list[list[float]] | None = None,
+    cov2: list[list[float]] | None = None,
+) -> float | None:
     """
-    Compute Euclidean distance between two MFCC vectors.
+    Compute distance between two MFCC representations.
 
-    Excludes c₀ (index 0) which captures overall energy/loudness,
-    to avoid double-counting with the loudness component (Berenzweig 2004).
+    When covariance matrices are available, uses Bhattacharyya distance to
+    compare single-Gaussian models N(μ, Σ) — a distributional distance that
+    accounts for both mean difference and timbral spread (Aucouturier 2002).
+    Falls back to Euclidean distance on means when covariance is unavailable.
+
+    Excludes c₀ (index 0) to avoid double-counting with loudness (Berenzweig 2004).
 
     Args:
-        mfcc1: First MFCC vector (typically 13-40 dimensions)
-        mfcc2: Second MFCC vector
+        mfcc1: First MFCC mean vector
+        mfcc2: Second MFCC mean vector
+        cov1: First MFCC covariance matrix (13x13)
+        cov2: Second MFCC covariance matrix (13x13)
 
     Returns:
-        Euclidean distance, or None if either input is None
+        Distance value, or None if mean data is missing
     """
     if mfcc1 is None or mfcc2 is None:
         return None
@@ -147,10 +158,66 @@ def mfcc_distance(mfcc1: list[float] | None, mfcc2: list[float] | None) -> float
     if n_coeffs <= 1:
         return None
 
-    arr1 = np.array(mfcc1[1:n_coeffs])
-    arr2 = np.array(mfcc2[1:n_coeffs])
+    mu1 = np.array(mfcc1[1:n_coeffs])
+    mu2 = np.array(mfcc2[1:n_coeffs])
 
-    return float(np.linalg.norm(arr1 - arr2))
+    if cov1 is not None and cov2 is not None:
+        return _bhattacharyya_distance(mu1, mu2, np.array(cov1), np.array(cov2), n_coeffs)
+
+    # Fallback: Euclidean distance on means
+    return float(np.linalg.norm(mu1 - mu2))
+
+
+def _bhattacharyya_distance(
+    mu1: np.ndarray,
+    mu2: np.ndarray,
+    cov1_full: np.ndarray,
+    cov2_full: np.ndarray,
+    n_coeffs: int,
+) -> float:
+    """
+    Compute Bhattacharyya distance between two single-Gaussian MFCC models.
+
+    D_B = (1/8)(μ₁-μ₂)ᵀ Σ_avg⁻¹ (μ₁-μ₂) + (1/2) ln(|Σ_avg| / √(|Σ₁||Σ₂|))
+
+    The first term measures mean difference weighted by covariance.
+    The second term measures how different the distribution shapes are.
+    """
+    # Extract submatrix: skip c₀ (row 0, col 0)
+    S1 = cov1_full[1:n_coeffs, 1:n_coeffs]
+    S2 = cov2_full[1:n_coeffs, 1:n_coeffs]
+
+    # Regularize to avoid singular matrices
+    eps = 1e-6
+    dim = S1.shape[0]
+    reg = eps * np.eye(dim)
+    S1 = S1 + reg
+    S2 = S2 + reg
+
+    S_avg = (S1 + S2) / 2.0
+
+    # Term 1: Mahalanobis-like distance on means
+    diff = mu1 - mu2
+    try:
+        S_avg_inv = np.linalg.inv(S_avg)
+    except np.linalg.LinAlgError:
+        # If inversion fails, fall back to Euclidean
+        return float(np.linalg.norm(diff))
+
+    term1 = (1.0 / 8.0) * float(diff @ S_avg_inv @ diff)
+
+    # Term 2: Distribution shape difference (using slogdet for stability)
+    sign_avg, logdet_avg = np.linalg.slogdet(S_avg)
+    sign1, logdet1 = np.linalg.slogdet(S1)
+    sign2, logdet2 = np.linalg.slogdet(S2)
+
+    # If any determinant is non-positive, skip term2
+    if sign_avg > 0 and sign1 > 0 and sign2 > 0:
+        term2 = 0.5 * (logdet_avg - 0.5 * (logdet1 + logdet2))
+    else:
+        term2 = 0.0
+
+    return float(term1 + term2)
 
 
 def compute_energy_score(

@@ -129,73 +129,76 @@ pref_avoid_mood(_) :- fail.
 
 % ----------------------------------------------------------------------------
 % Energy Compatibility Rules
-% Based on energy score difference
+% Based on spectral energy score difference
+% AcousticBrainz energy scores are typically 0.001-0.01 range
+% Thresholds calibrated to actual data distribution
 % ----------------------------------------------------------------------------
 
-% Smooth energy transition (delta < 0.15)
+% Very similar energy (delta < 0.001)
 0.90::energy_compatible(T1, T2) :-
     energy_score(T1, E1),
     energy_score(T2, E2),
     energy_diff(E1, E2, Diff),
-    Diff < 0.15.
+    Diff < 0.001.
 
-% Moderate energy transition (0.15 <= delta < 0.3)
-0.75::energy_compatible(T1, T2) :-
+% Similar energy (0.001 <= delta < 0.003)
+0.70::energy_compatible(T1, T2) :-
     energy_score(T1, E1),
     energy_score(T2, E2),
     energy_diff(E1, E2, Diff),
-    Diff >= 0.15,
-    Diff < 0.3.
+    Diff >= 0.001,
+    Diff < 0.003.
 
-% Noticeable energy transition (0.3 <= delta < 0.5)
+% Noticeable energy difference (0.003 <= delta < 0.005)
 0.45::energy_compatible(T1, T2) :-
     energy_score(T1, E1),
     energy_score(T2, E2),
     energy_diff(E1, E2, Diff),
-    Diff >= 0.3,
-    Diff < 0.5.
+    Diff >= 0.003,
+    Diff < 0.005.
 
-% Jarring energy transition (delta >= 0.5)
-0.15::energy_compatible(T1, T2) :-
+% Large energy difference (delta >= 0.005)
+0.20::energy_compatible(T1, T2) :-
     energy_score(T1, E1),
     energy_score(T2, E2),
     energy_diff(E1, E2, Diff),
-    Diff >= 0.5.
+    Diff >= 0.005.
 
 % ----------------------------------------------------------------------------
 % Loudness Compatibility Rules
-% Based on average loudness difference
+% AcousticBrainz average_loudness is on a 0-1 scale
+% Thresholds calibrated to actual data: pop ~0.77, classical 0.01-0.18
 % ----------------------------------------------------------------------------
 
-% Very consistent loudness (< 3 units)
-0.95::loudness_compatible(T1, T2) :-
+% Very consistent loudness (diff < 0.05)
+0.90::loudness_compatible(T1, T2) :-
     average_loudness(T1, L1),
     average_loudness(T2, L2),
     loudness_diff(L1, L2, Diff),
-    Diff < 3.
+    Diff < 0.05.
 
-% Consistent loudness (3-6 units)
-0.85::loudness_compatible(T1, T2) :-
+% Consistent loudness (0.05 <= diff < 0.15)
+0.75::loudness_compatible(T1, T2) :-
     average_loudness(T1, L1),
     average_loudness(T2, L2),
     loudness_diff(L1, L2, Diff),
-    Diff >= 3,
-    Diff < 6.
+    Diff >= 0.05,
+    Diff < 0.15.
 
-% Moderate loudness difference (6-10 units)
-0.60::loudness_compatible(T1, T2) :-
+% Moderate loudness difference (0.15 <= diff < 0.35)
+0.45::loudness_compatible(T1, T2) :-
     average_loudness(T1, L1),
     average_loudness(T2, L2),
     loudness_diff(L1, L2, Diff),
-    Diff >= 6,
-    Diff < 10.
+    Diff >= 0.15,
+    Diff < 0.35.
 
-% Large loudness difference (>= 10 units)
-0.30::loudness_compatible(T1, T2) :-
+% Large loudness difference (diff >= 0.35)
+0.15::loudness_compatible(T1, T2) :-
     average_loudness(T1, L1),
     average_loudness(T2, L2),
     loudness_diff(L1, L2, Diff),
-    Diff >= 10.
+    Diff >= 0.35.
 
 % Default if loudness data missing
 0.70::loudness_compatible(T1, T2) :-
@@ -261,30 +264,31 @@ pref_avoid_mood(_) :- fail.
 
 % ----------------------------------------------------------------------------
 % Timbre Compatibility Rules
-% Based on MFCC distance and spectral characteristics
+% Based on Bhattacharyya distance between single-Gaussian MFCC models
+% (Aucouturier & Pachet 2002; thresholds calibrated on test data)
 % ----------------------------------------------------------------------------
 
-% Very similar timbre (distance < 5)
+% Very similar timbre (distance < 0.5) — same genre, similar instruments
 0.90::timbre_compatible(T1, T2) :-
     mfcc_dist(T1, T2, Dist),
-    Dist < 5.
+    Dist < 0.5.
 
-% Similar timbre (5 <= distance < 10)
+% Similar timbre (0.5 <= distance < 1.0) — related genres
 0.70::timbre_compatible(T1, T2) :-
     mfcc_dist(T1, T2, Dist),
-    Dist >= 5,
-    Dist < 10.
+    Dist >= 0.5,
+    Dist < 1.0.
 
-% Moderate timbre difference (10 <= distance < 15)
+% Moderate timbre difference (1.0 <= distance < 2.0) — cross-genre
 0.50::timbre_compatible(T1, T2) :-
     mfcc_dist(T1, T2, Dist),
-    Dist >= 10,
-    Dist < 15.
+    Dist >= 1.0,
+    Dist < 2.0.
 
-% Different timbre (distance >= 15)
+% Very different timbre (distance >= 2.0)
 0.30::timbre_compatible(T1, T2) :-
     mfcc_dist(T1, T2, Dist),
-    Dist >= 15.
+    Dist >= 2.0.
 
 % Default if MFCC data missing
 0.60::timbre_compatible(T1, T2) :-

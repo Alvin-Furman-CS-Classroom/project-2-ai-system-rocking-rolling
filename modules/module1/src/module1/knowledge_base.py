@@ -338,8 +338,8 @@ class MusicKnowledgeBase:
             loudness_diff = abs(track1.average_loudness - track2.average_loudness)
             facts += Term("loudness_diff", Constant(track1.average_loudness), Constant(track2.average_loudness), Constant(loudness_diff))
 
-        # MFCC distance
-        mfcc_dist = mfcc_distance(track1.mfcc, track2.mfcc)
+        # MFCC distance (Bhattacharyya when covariance available, else Euclidean)
+        mfcc_dist = mfcc_distance(track1.mfcc, track2.mfcc, track1.mfcc_cov, track2.mfcc_cov)
         if mfcc_dist is not None:
             facts += Term("mfcc_dist", t1, t2, Constant(mfcc_dist))
 

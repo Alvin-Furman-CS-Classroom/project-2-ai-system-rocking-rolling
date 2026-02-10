@@ -135,10 +135,14 @@ def load_track_from_data(
     # Spectral features from lowlevel.lowlevel
     mfcc_data = _get_nested(lowlevel, "lowlevel", "mfcc")
     mfcc: list[float] | None = None
+    mfcc_cov: list[list[float]] | None = None
     if mfcc_data and isinstance(mfcc_data, dict):
         mfcc_mean = mfcc_data.get("mean")
         if mfcc_mean and isinstance(mfcc_mean, list):
             mfcc = [float(x) for x in mfcc_mean]
+        mfcc_cov_raw = mfcc_data.get("cov")
+        if mfcc_cov_raw and isinstance(mfcc_cov_raw, list):
+            mfcc_cov = [[float(x) for x in row] for row in mfcc_cov_raw]
 
     spectral_centroid = _get_mean(lowlevel, "lowlevel", "spectral_centroid")
     dissonance = _get_mean(lowlevel, "lowlevel", "dissonance")
@@ -174,6 +178,7 @@ def load_track_from_data(
         average_loudness=average_loudness,
         dynamic_complexity=dynamic_complexity,
         mfcc=mfcc,
+        mfcc_cov=mfcc_cov,
         spectral_centroid=spectral_centroid,
         dissonance=dissonance,
         mood_happy=mood_happy,

@@ -41,6 +41,7 @@ class TrackFeatures:
 
     # Spectral characteristics (from lowlevel.lowlevel)
     mfcc: list[float] | None = None  # Extract from mfcc.mean array
+    mfcc_cov: list[list[float]] | None = None  # 13x13 covariance matrix from mfcc.cov
     spectral_centroid: float | None = None  # Extract from spectral_centroid.mean
     dissonance: float | None = None  # Extract from dissonance.mean
 
