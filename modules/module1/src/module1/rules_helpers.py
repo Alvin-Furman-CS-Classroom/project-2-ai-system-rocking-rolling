@@ -4,7 +4,22 @@ These functions are used internally by the MusicKnowledgeBase to compute
 values that are then added as facts to ProbLog.
 """
 
+import math
+
 import numpy as np
+
+# Krumhansl-Kessler key profiles (Cognitive Foundations of Musical Pitch, 1990)
+# Probe-tone ratings measuring perceived fitness of each pitch class as tonic
+# Index 0 = C, 1 = C#/Db, 2 = D, ..., 11 = B
+KRUMHANSL_MAJOR = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88]
+KRUMHANSL_MINOR = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17]
+
+# Semitone offsets from C for each key name (used to rotate profiles)
+KEY_SEMITONE_OFFSET = {
+    "c": 0, "c_sharp": 1, "d_flat": 1, "d": 2, "d_sharp": 3, "e_flat": 3,
+    "e": 4, "f": 5, "f_sharp": 6, "g_flat": 6, "g": 7, "g_sharp": 8,
+    "a_flat": 8, "a": 9, "a_sharp": 10, "b_flat": 10, "b": 11,
+}
 
 # Circle of fifths in order (normalized to lowercase with underscores)
 CIRCLE_OF_FIFTHS = [

@@ -40,6 +40,17 @@ def _get_classifier(data: dict, *keys) -> tuple[str, float] | None:
     return (value, prob)
 
 
+def _get_classifier_all(data: dict, *keys) -> dict[str, float] | None:
+    """Get the full probability distribution from a highlevel classifier's 'all' field."""
+    classifier = _get_nested(data, *keys)
+    if classifier is None:
+        return None
+    all_field = classifier.get("all")
+    if all_field is None or not isinstance(all_field, dict):
+        return None
+    return {k: float(v) for k, v in all_field.items()}
+
+
 def _get_first_tag(data: dict, tag_name: str) -> str | None:
     """Get the first value of a tag list, or None."""
     tags = _get_nested(data, "metadata", "tags", tag_name)
@@ -156,6 +167,7 @@ def load_track_from_data(
     mood_acoustic = _get_classifier(highlevel, "highlevel", "mood_acoustic")
     timbre = _get_classifier(highlevel, "highlevel", "timbre")
     genre_rosamerica = _get_classifier(highlevel, "highlevel", "genre_rosamerica")
+    genre_rosamerica_all = _get_classifier_all(highlevel, "highlevel", "genre_rosamerica")
 
     return TrackFeatures(
         mbid=mbid,
@@ -189,6 +201,7 @@ def load_track_from_data(
         mood_acoustic=mood_acoustic,
         timbre=timbre,
         genre_rosamerica=genre_rosamerica,
+        genre_rosamerica_all=genre_rosamerica_all,
     )
 
 

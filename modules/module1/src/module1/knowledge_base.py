@@ -8,7 +8,7 @@ from pathlib import Path
 
 from problog import get_evaluatable
 from problog.engine import DefaultEngine
-from problog.logic import Constant, Term
+from problog.logic import AnnotatedDisjunction, Constant, Term
 from problog.program import PrologString, SimpleProgram
 
 from .data_models import (
@@ -294,14 +294,28 @@ class MusicKnowledgeBase:
         if track.dynamic_complexity is not None:
             facts += Term("dynamic_complexity", tid, Constant(track.dynamic_complexity))
 
-        # Mood (use the dominant mood, fallback to "unknown" for low-level-only tracks)
-        mood = self._get_dominant_mood(track) or "unknown"
-        facts += Term("has_mood", tid, Term(mood))
+        # Independent probabilistic facts for each mood dimension
+        has_any_mood = False
+        for mood_name in ["happy", "sad", "aggressive", "relaxed", "party", "acoustic"]:
+            prob = track.mood_positive_probability(mood_name)
+            if prob is not None:
+                has_any_mood = True
+                facts += Term(f"mood_{mood_name}", tid, p=Constant(prob))
 
-        # Genre (from rosamerica classifier)
-        if track.genre_rosamerica is not None:
-            genre_value, _ = track.genre_rosamerica
-            facts += Term("has_genre", tid, Term(genre_value))
+        if has_any_mood:
+            facts += Term("has_mood_data", tid)
+
+        # Genre distribution as annotated disjunction (mutually exclusive)
+        genre_dist = track.normalized_genre_distribution()
+        if genre_dist:
+            heads = [
+                Term("genre", tid, Term(g), p=Constant(p))
+                for g, p in genre_dist.items()
+                if p > 0.001
+            ]
+            if heads:
+                facts += AnnotatedDisjunction(heads, Term("true"))
+                facts += Term("has_genre_data", tid)
 
     def _add_computed_facts(
         self,
@@ -358,27 +372,17 @@ class MusicKnowledgeBase:
             for mood in prefs.avoid_moods:
                 facts += Term("pref_avoid_mood", Term(mood))
 
-    def _get_dominant_mood(self, track: TrackFeatures) -> str | None:
-        """Get the dominant mood from highlevel classifiers."""
-        moods = [
-            ("happy", track.mood_happy),
-            ("sad", track.mood_sad),
-            ("aggressive", track.mood_aggressive),
-            ("relaxed", track.mood_relaxed),
-            ("party", track.mood_party),
-        ]
-
-        # Find the mood with highest probability where value matches the positive class
+    def _get_top_mood(self, track: TrackFeatures) -> str | None:
+        """Get the highest-probability positive mood for display."""
+        moods = ["happy", "sad", "aggressive", "relaxed", "party", "acoustic"]
         best_mood = None
         best_prob = 0.0
 
-        for mood_name, mood_data in moods:
-            if mood_data is not None:
-                value, prob = mood_data
-                # Check if this is the positive classification
-                if value == mood_name and prob > best_prob:
-                    best_mood = mood_name
-                    best_prob = prob
+        for mood_name in moods:
+            prob = track.mood_positive_probability(mood_name)
+            if prob is not None and prob > best_prob:
+                best_mood = mood_name
+                best_prob = prob
 
         return best_mood
 
@@ -422,8 +426,8 @@ class MusicKnowledgeBase:
             )
 
         # Mood
-        m1 = self._get_dominant_mood(track1) or "unknown"
-        m2 = self._get_dominant_mood(track2) or "unknown"
+        m1 = self._get_top_mood(track1) or "unknown"
+        m2 = self._get_top_mood(track2) or "unknown"
         lines.append(f"Mood: {m1} -> {m2} (P={probs['mood_compatible']:.0%})")
 
         # Genre
