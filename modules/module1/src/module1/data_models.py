@@ -55,6 +55,41 @@ class TrackFeatures:
     mood_acoustic: tuple[str, float] | None = None
     timbre: tuple[str, float] | None = None  # ("bright"/"dark", prob)
     genre_rosamerica: tuple[str, float] | None = None  # ("cla"/"dan"/"hip"/etc., prob)
+    genre_rosamerica_all: dict[str, float] | None = None  # Full 8-class distribution
+
+    @property
+    def has_highlevel_data(self) -> bool:
+        """Check if this track has highlevel classifier data."""
+        return self.mood_happy is not None
+
+    def mood_positive_probability(self, mood_name: str) -> float | None:
+        """Get the positive-class probability for a mood classifier.
+
+        If mood_happy = ("happy", 0.979), returns 0.979.
+        If mood_happy = ("not_happy", 0.975), returns 1 - 0.975 = 0.025.
+        """
+        mood_field_map = {
+            "happy": self.mood_happy,
+            "sad": self.mood_sad,
+            "aggressive": self.mood_aggressive,
+            "relaxed": self.mood_relaxed,
+            "party": self.mood_party,
+            "acoustic": self.mood_acoustic,
+        }
+        mood_data = mood_field_map.get(mood_name)
+        if mood_data is None:
+            return None
+        value, prob = mood_data
+        return prob if value == mood_name else 1.0 - prob
+
+    def normalized_genre_distribution(self) -> dict[str, float] | None:
+        """Get normalized genre probabilities that sum to 1.0."""
+        if self.genre_rosamerica_all is None:
+            return None
+        total = sum(self.genre_rosamerica_all.values())
+        if total <= 0:
+            return None
+        return {k: v / total for k, v in self.genre_rosamerica_all.items()}
 
     @property
     def energy_score(self) -> float:
