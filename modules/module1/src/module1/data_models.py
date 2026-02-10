@@ -53,6 +53,7 @@ class TrackFeatures:
     mood_party: tuple[str, float] | None = None
     mood_acoustic: tuple[str, float] | None = None
     timbre: tuple[str, float] | None = None  # ("bright"/"dark", prob)
+    genre_rosamerica: tuple[str, float] | None = None  # ("cla"/"dan"/"hip"/etc., prob)
 
     @property
     def energy_score(self) -> float:
@@ -125,12 +126,13 @@ class UserPreferences:
     avoid_moods: list[str] | None = None
 
     # Weights for combining scores (should sum to ~1.0)
-    key_weight: float = 0.25
-    tempo_weight: float = 0.30
-    energy_weight: float = 0.20
-    loudness_weight: float = 0.10
-    mood_weight: float = 0.10
-    timbre_weight: float = 0.05
+    key_weight: float = 0.15
+    tempo_weight: float = 0.20
+    energy_weight: float = 0.15
+    loudness_weight: float = 0.05
+    mood_weight: float = 0.15
+    timbre_weight: float = 0.20
+    genre_weight: float = 0.10
 
 
 @dataclass
@@ -148,6 +150,7 @@ class TransitionResult:
     loudness_compatibility: float = 0.0
     mood_compatibility: float = 0.0
     timbre_compatibility: float = 0.0
+    genre_compatibility: float = 0.0
 
     violations: list[str] = field(default_factory=list)
     explanation: str = ""

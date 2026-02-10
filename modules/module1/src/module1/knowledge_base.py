@@ -120,13 +120,13 @@ class MusicKnowledgeBase:
         t2 = Term(t2_id)
 
         queries = [
-            ("smooth_transition", Term("smooth_transition", t1, t2)),
             ("key_compatible", Term("key_compatible", t1, t2)),
             ("tempo_compatible", Term("tempo_compatible", t1, t2)),
             ("energy_compatible", Term("energy_compatible", t1, t2)),
             ("loudness_compatible", Term("loudness_compatible", t1, t2)),
             ("mood_compatible", Term("mood_compatible", t1, t2)),
             ("timbre_compatible", Term("timbre_compatible", t1, t2)),
+            ("genre_compatible", Term("genre_compatible", t1, t2)),
         ]
 
         query_terms = [q[1] for q in queries]
@@ -137,6 +137,18 @@ class MusicKnowledgeBase:
         probs = {}
         for name, term in queries:
             probs[name] = float(results.get(term, 0.0))
+
+        # Compute overall probability as weighted average of components
+        weights = self._preferences
+        probability = (
+            weights.key_weight * probs["key_compatible"]
+            + weights.tempo_weight * probs["tempo_compatible"]
+            + weights.energy_weight * probs["energy_compatible"]
+            + weights.loudness_weight * probs["loudness_compatible"]
+            + weights.mood_weight * probs["mood_compatible"]
+            + weights.timbre_weight * probs["timbre_compatible"]
+            + weights.genre_weight * probs["genre_compatible"]
+        )
 
         # Build violations list
         violations = []
@@ -153,7 +165,6 @@ class MusicKnowledgeBase:
         # Build explanation
         explanation = self._build_explanation(track1, track2, probs)
 
-        probability = probs["smooth_transition"]
         return TransitionResult(
             probability=probability,
             penalty=1.0 - probability,
@@ -164,6 +175,7 @@ class MusicKnowledgeBase:
             loudness_compatibility=probs["loudness_compatible"],
             mood_compatibility=probs["mood_compatible"],
             timbre_compatibility=probs["timbre_compatible"],
+            genre_compatibility=probs["genre_compatible"],
             violations=violations,
             explanation=explanation,
         )
@@ -282,10 +294,14 @@ class MusicKnowledgeBase:
         if track.dynamic_complexity is not None:
             facts += Term("dynamic_complexity", tid, Constant(track.dynamic_complexity))
 
-        # Mood (use the dominant mood)
-        mood = self._get_dominant_mood(track)
-        if mood:
-            facts += Term("has_mood", tid, Term(mood))
+        # Mood (use the dominant mood, fallback to "unknown" for low-level-only tracks)
+        mood = self._get_dominant_mood(track) or "unknown"
+        facts += Term("has_mood", tid, Term(mood))
+
+        # Genre (from rosamerica classifier)
+        if track.genre_rosamerica is not None:
+            genre_value, _ = track.genre_rosamerica
+            facts += Term("has_genre", tid, Term(genre_value))
 
     def _add_computed_facts(
         self,
@@ -409,5 +425,10 @@ class MusicKnowledgeBase:
         m1 = self._get_dominant_mood(track1) or "unknown"
         m2 = self._get_dominant_mood(track2) or "unknown"
         lines.append(f"Mood: {m1} -> {m2} (P={probs['mood_compatible']:.0%})")
+
+        # Genre
+        g1 = track1.genre_rosamerica[0] if track1.genre_rosamerica else "unknown"
+        g2 = track2.genre_rosamerica[0] if track2.genre_rosamerica else "unknown"
+        lines.append(f"Genre: {g1} -> {g2} (P={probs['genre_compatible']:.0%})")
 
         return "\n".join(lines)

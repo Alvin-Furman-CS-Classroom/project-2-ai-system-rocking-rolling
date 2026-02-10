@@ -14,6 +14,9 @@
 % Double-time defaults to false
 is_double_time(_, _) :- fail.
 
+% Genre defaults to undefined
+has_genre(_, _) :- fail.
+
 % User preferences default to disabled
 pref_consistent_tempo :- fail.
 pref_target_mood(_) :- fail.
@@ -286,6 +289,28 @@ pref_avoid_mood(_) :- fail.
 % Default if MFCC data missing
 0.60::timbre_compatible(T1, T2) :-
     \+ mfcc_dist(T1, T2, _).
+
+% ----------------------------------------------------------------------------
+% Genre Compatibility Rules
+% Based on genre classification from AcousticBrainz (rosamerica model)
+% Confidence values inspired by Aucouturier & Pachet (2002) Table 3
+% ----------------------------------------------------------------------------
+
+% Same genre - very compatible
+0.90::genre_compatible(T1, T2) :-
+    has_genre(T1, G),
+    has_genre(T2, G).
+
+% Different genre - low compatibility
+0.50::genre_compatible(T1, T2) :-
+    has_genre(T1, G1),
+    has_genre(T2, G2),
+    G1 \= G2.
+
+% Missing genre data - neutral fallback
+0.70::genre_compatible(T1, T2) :-
+    \+ has_genre(T1, _);
+    \+ has_genre(T2, _).
 
 % ----------------------------------------------------------------------------
 % Composite Smoothness Rule

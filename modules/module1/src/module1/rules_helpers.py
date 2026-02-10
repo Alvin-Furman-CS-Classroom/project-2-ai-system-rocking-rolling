@@ -129,6 +129,9 @@ def mfcc_distance(mfcc1: list[float] | None, mfcc2: list[float] | None) -> float
     """
     Compute Euclidean distance between two MFCC vectors.
 
+    Excludes c₀ (index 0) which captures overall energy/loudness,
+    to avoid double-counting with the loudness component (Berenzweig 2004).
+
     Args:
         mfcc1: First MFCC vector (typically 13-40 dimensions)
         mfcc2: Second MFCC vector
@@ -139,13 +142,13 @@ def mfcc_distance(mfcc1: list[float] | None, mfcc2: list[float] | None) -> float
     if mfcc1 is None or mfcc2 is None:
         return None
 
-    # Use the first 13 coefficients (standard for music comparison)
+    # Use coefficients 1-12 (skip c₀ which captures overall energy)
     n_coeffs = min(13, len(mfcc1), len(mfcc2))
-    if n_coeffs == 0:
+    if n_coeffs <= 1:
         return None
 
-    arr1 = np.array(mfcc1[:n_coeffs])
-    arr2 = np.array(mfcc2[:n_coeffs])
+    arr1 = np.array(mfcc1[1:n_coeffs])
+    arr2 = np.array(mfcc2[1:n_coeffs])
 
     return float(np.linalg.norm(arr1 - arr2))
 

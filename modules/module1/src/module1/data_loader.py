@@ -93,16 +93,11 @@ def load_track_from_data(
     Returns:
         TrackFeatures dataclass with extracted features
     """
-    # Get MBID from highlevel metadata (required)
-    mbid = _get_first_tag(highlevel, "musicbrainz_recordingid")
-    if mbid is None:
-        # Fallback: generate a placeholder
-        mbid = "unknown"
-
-    # Metadata from highlevel
-    title = _get_first_tag(highlevel, "title")
-    artist = _get_first_tag(highlevel, "artist")
-    album = _get_first_tag(highlevel, "album")
+    # Get metadata: prefer highlevel, fallback to lowlevel
+    mbid = _get_first_tag(highlevel, "musicbrainz_recordingid") or _get_first_tag(lowlevel, "musicbrainz_recordingid") or "unknown"
+    title = _get_first_tag(highlevel, "title") or _get_first_tag(lowlevel, "title")
+    artist = _get_first_tag(highlevel, "artist") or _get_first_tag(lowlevel, "artist")
+    album = _get_first_tag(highlevel, "album") or _get_first_tag(lowlevel, "album")
 
     # Rhythm features from lowlevel
     bpm = _get_nested(lowlevel, "rhythm", "bpm") or 0.0
@@ -156,6 +151,7 @@ def load_track_from_data(
     mood_party = _get_classifier(highlevel, "highlevel", "mood_party")
     mood_acoustic = _get_classifier(highlevel, "highlevel", "mood_acoustic")
     timbre = _get_classifier(highlevel, "highlevel", "timbre")
+    genre_rosamerica = _get_classifier(highlevel, "highlevel", "genre_rosamerica")
 
     return TrackFeatures(
         mbid=mbid,
@@ -187,7 +183,27 @@ def load_track_from_data(
         mood_party=mood_party,
         mood_acoustic=mood_acoustic,
         timbre=timbre,
+        genre_rosamerica=genre_rosamerica,
     )
+
+
+def load_track_from_lowlevel(lowlevel_path: str | Path) -> TrackFeatures:
+    """
+    Load a track from only a lowlevel JSON file (no highlevel data).
+
+    High-level classifiers (mood, timbre, danceability) will be None.
+
+    Args:
+        lowlevel_path: Path to the lowlevel JSON file
+
+    Returns:
+        TrackFeatures dataclass with low-level features only
+    """
+    lowlevel_path = Path(lowlevel_path)
+    with open(lowlevel_path) as f:
+        lowlevel = json.load(f)
+
+    return load_track_from_data(lowlevel, highlevel={})
 
 
 def load_tracks_batch(
