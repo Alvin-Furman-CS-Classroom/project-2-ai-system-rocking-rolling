@@ -1,5 +1,15 @@
 # Module 1 Changelog
 
+## 2026-02-10 (v6)
+- Replaced all hand-tuned threshold rules with research-grounded continuous probability functions:
+  - **Key**: Krumhansl-Kessler (1990) probe-tone profiles + Pearson correlation. Captures relative major/minor and tritone nuances that circle-of-fifths distance misses.
+  - **Tempo**: Weber's law Gaussian decay (Drake & Botte 1993). JND ≈ 4%, σ = 3×JND = 0.12. Handles double/half-time via min(Δ_direct, Δ_double, Δ_half).
+  - **Timbre**: Bhattacharyya coefficient BC = exp(-D_B) (Aucouturier & Pachet 2002). Principled distance-to-probability conversion.
+  - **Loudness**: Gaussian decay σ=0.15 on AcousticBrainz 0-1 scale.
+  - **Energy**: Gaussian decay σ=0.003 calibrated to spectral energy band range.
+- All 5 components now computed in Python and asserted as probabilistic facts (same pattern as mood/genre from v5).
+- `music_theory.pl` reduced to: default clauses + mood noisy-OR + genre dot product + composite rules + preference rules. No threshold rules remain.
+
 ## 2026-02-10 (v5)
 - Replaced deterministic mood/genre facts with proper ProbLog probabilistic inference:
   - **Mood**: Independent probabilistic facts `P::mood_happy(T)`, `P::mood_sad(T)`, etc. from AcousticBrainz classifier probabilities. ProbLog computes noisy-OR: P(mood_compatible) = 1 - ∏(1 - P(mood_X(T1)) × P(mood_X(T2))) over 6 mood dimensions. No hand-tuned cross-mood bonuses.
