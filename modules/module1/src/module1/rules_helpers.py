@@ -285,3 +285,110 @@ def derive_mood_from_features(
         return "intense"
     else:
         return "neutral"
+
+
+# ---------------------------------------------------------------------------
+# Research-grounded compatibility probability functions (v6)
+# ---------------------------------------------------------------------------
+
+
+def _get_key_profile(key: str, scale: str) -> np.ndarray:
+    """Get the Krumhansl-Kessler profile for a key, rotated to the correct tonic."""
+    normalized = normalize_key(key)
+    offset = KEY_SEMITONE_OFFSET.get(normalized, 0)
+    base = KRUMHANSL_MAJOR if scale == "major" else KRUMHANSL_MINOR
+    # Rotate so index 0 = the tonic
+    rotated = base[-offset:] + base[:-offset] if offset > 0 else list(base)
+    return np.array(rotated)
+
+
+def key_compatibility_prob(key1: str, scale1: str, key2: str, scale2: str) -> float:
+    """
+    Compute key compatibility using Krumhansl-Kessler profile correlation.
+
+    Based on "Cognitive Foundations of Musical Pitch" (Krumhansl, 1990).
+    Inter-key similarity is the Pearson correlation between probe-tone profiles,
+    mapped from [-1, 1] to [0, 1].
+    """
+    p1 = _get_key_profile(key1, scale1)
+    p2 = _get_key_profile(key2, scale2)
+
+    # Pearson correlation
+    r = float(np.corrcoef(p1, p2)[0, 1])
+
+    # Map r in [-1, 1] to probability in [0, 1]
+    return (r + 1.0) / 2.0
+
+
+def tempo_compatibility_prob(bpm1: float, bpm2: float) -> float:
+    """
+    Compute tempo compatibility using Weber's law Gaussian decay.
+
+    Based on Drake & Botte (1993): JND for tempo ≈ 4% of reference BPM.
+    Uses 3× JND as σ so that differences up to ~1 JND score ≈ 95%.
+    Handles double-time/half-time relationships.
+    """
+    if bpm1 <= 0 or bpm2 <= 0:
+        return 0.5
+
+    avg = (bpm1 + bpm2) / 2.0
+
+    # Relative differences: direct, double-time, half-time
+    delta_direct = abs(bpm1 - bpm2) / avg
+    delta_double = abs(bpm1 - 2.0 * bpm2) / ((bpm1 + 2.0 * bpm2) / 2.0)
+    delta_half = abs(2.0 * bpm1 - bpm2) / ((2.0 * bpm1 + bpm2) / 2.0)
+
+    delta = min(delta_direct, delta_double, delta_half)
+
+    # Weber JND ≈ 4%, σ = 3 × JND = 0.12
+    sigma = 0.12
+    return math.exp(-(delta ** 2) / (2.0 * sigma ** 2))
+
+
+def timbre_compatibility_prob(
+    mfcc1: list[float] | None,
+    mfcc2: list[float] | None,
+    cov1: list[list[float]] | None = None,
+    cov2: list[list[float]] | None = None,
+) -> float:
+    """
+    Compute timbre compatibility as Bhattacharyya coefficient.
+
+    BC = exp(-D_B) where D_B is the Bhattacharyya distance between
+    single-Gaussian MFCC models (Aucouturier & Pachet, 2002).
+    BC ∈ [0, 1] measures the overlap between two distributions.
+    """
+    d_b = mfcc_distance(mfcc1, mfcc2, cov1, cov2)
+    if d_b is None:
+        return 0.6  # neutral fallback for missing data
+    return math.exp(-d_b)
+
+
+def loudness_compatibility_prob(
+    loud1: float | None,
+    loud2: float | None,
+) -> float:
+    """
+    Compute loudness compatibility using Gaussian decay.
+
+    AcousticBrainz average_loudness is on a 0-1 scale.
+    σ = 0.15 so that within-genre differences (~0.05) score ~95%
+    and pop (0.77) vs classical (0.10) scores ~2%.
+    """
+    if loud1 is None or loud2 is None:
+        return 0.7  # neutral fallback
+    delta = abs(loud1 - loud2)
+    sigma = 0.15
+    return math.exp(-(delta ** 2) / (2.0 * sigma ** 2))
+
+
+def energy_compatibility_prob(energy1: float, energy2: float) -> float:
+    """
+    Compute energy compatibility using Gaussian decay.
+
+    AcousticBrainz spectral energy scores are typically 0.001-0.01.
+    σ = 0.003 calibrated to actual data range.
+    """
+    delta = abs(energy1 - energy2)
+    sigma = 0.003
+    return math.exp(-(delta ** 2) / (2.0 * sigma ** 2))

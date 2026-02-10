@@ -19,9 +19,13 @@ from .data_models import (
 )
 from .rules_helpers import (
     circle_of_fifths_distance,
+    energy_compatibility_prob,
     is_double_time,
-    mfcc_distance,
+    key_compatibility_prob,
+    loudness_compatibility_prob,
     normalize_key,
+    tempo_compatibility_prob,
+    timbre_compatibility_prob,
 )
 
 
@@ -104,8 +108,8 @@ class MusicKnowledgeBase:
         self._add_track_facts(facts, t1_id, track1)
         self._add_track_facts(facts, t2_id, track2)
 
-        # Add computed facts (circle distance, bpm diff, etc.)
-        self._add_computed_facts(facts, t1_id, t2_id, track1, track2)
+        # Add research-grounded compatibility probabilities
+        self._add_compatibility_facts(facts, t1_id, t2_id, track1, track2)
 
         # Add preference facts
         self._add_preference_facts(facts)
@@ -317,7 +321,7 @@ class MusicKnowledgeBase:
                 facts += AnnotatedDisjunction(heads, Term("true"))
                 facts += Term("has_genre_data", tid)
 
-    def _add_computed_facts(
+    def _add_compatibility_facts(
         self,
         facts: SimpleProgram,
         t1_id: str,
@@ -325,37 +329,37 @@ class MusicKnowledgeBase:
         track1: TrackFeatures,
         track2: TrackFeatures,
     ) -> None:
-        """Add computed relationship facts between tracks."""
+        """Compute research-grounded compatibility probabilities and assert as facts."""
         t1 = Term(t1_id)
         t2 = Term(t2_id)
-        k1 = Term(normalize_key(track1.key))
-        k2 = Term(normalize_key(track2.key))
 
-        # Circle of fifths distance
-        dist = circle_of_fifths_distance(track1.key, track2.key)
-        facts += Term("circle_distance", k1, k2, Constant(dist))
+        # Key: Krumhansl-Kessler profile correlation (1990)
+        p_key = key_compatibility_prob(
+            track1.key, track1.scale, track2.key, track2.scale,
+        )
+        facts += Term("key_compatible", t1, t2, p=Constant(p_key))
 
-        # BPM difference (absolute)
-        bpm_diff = abs(track1.bpm - track2.bpm)
-        facts += Term("bpm_diff", Constant(track1.bpm), Constant(track2.bpm), Constant(bpm_diff))
+        # Tempo: Weber's law Gaussian decay (Drake & Botte 1993)
+        p_tempo = tempo_compatibility_prob(track1.bpm, track2.bpm)
+        facts += Term("tempo_compatible", t1, t2, p=Constant(p_tempo))
 
-        # Double-time check
-        if is_double_time(track1.bpm, track2.bpm):
-            facts += Term("is_double_time", Constant(track1.bpm), Constant(track2.bpm))
+        # Timbre: Bhattacharyya coefficient (Aucouturier & Pachet 2002)
+        p_timbre = timbre_compatibility_prob(
+            track1.mfcc, track2.mfcc, track1.mfcc_cov, track2.mfcc_cov,
+        )
+        facts += Term("timbre_compatible", t1, t2, p=Constant(p_timbre))
 
-        # Energy difference
-        energy_diff = abs(track1.energy_score - track2.energy_score)
-        facts += Term("energy_diff", Constant(track1.energy_score), Constant(track2.energy_score), Constant(energy_diff))
+        # Loudness: Gaussian decay
+        p_loud = loudness_compatibility_prob(
+            track1.average_loudness, track2.average_loudness,
+        )
+        facts += Term("loudness_compatible", t1, t2, p=Constant(p_loud))
 
-        # Loudness difference (if both available)
-        if track1.average_loudness is not None and track2.average_loudness is not None:
-            loudness_diff = abs(track1.average_loudness - track2.average_loudness)
-            facts += Term("loudness_diff", Constant(track1.average_loudness), Constant(track2.average_loudness), Constant(loudness_diff))
-
-        # MFCC distance (Bhattacharyya when covariance available, else Euclidean)
-        mfcc_dist = mfcc_distance(track1.mfcc, track2.mfcc, track1.mfcc_cov, track2.mfcc_cov)
-        if mfcc_dist is not None:
-            facts += Term("mfcc_dist", t1, t2, Constant(mfcc_dist))
+        # Energy: Gaussian decay
+        p_energy = energy_compatibility_prob(
+            track1.energy_score, track2.energy_score,
+        )
+        facts += Term("energy_compatible", t1, t2, p=Constant(p_energy))
 
     def _add_preference_facts(self, facts: SimpleProgram) -> None:
         """Add user preference facts to ProbLog."""
