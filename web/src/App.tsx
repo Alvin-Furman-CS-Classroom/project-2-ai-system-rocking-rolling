@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { MusicBrainzClient } from "@kellnerd/musicbrainz";
 
 const client = new MusicBrainzClient({
@@ -24,6 +24,26 @@ interface SearchResponse {
   count: number;
 }
 
+interface CompareComponents {
+  key: number;
+  tempo: number;
+  energy: number;
+  loudness: number;
+  mood: number;
+  timbre: number;
+  genre: number;
+}
+
+interface CompareResponse {
+  recording_id_1: string;
+  recording_id_2: string;
+  score: number;
+  is_compatible: boolean;
+  components: CompareComponents;
+  violations: string[];
+  explanation: string;
+}
+
 function formatDuration(ms: number | null): string {
   if (ms === null) return "?:??";
   const minutes = Math.floor(ms / 60000);
@@ -39,10 +59,6 @@ function artistName(recording: Recording): string {
   );
 }
 
-function stubSimilarityScore(_a: Recording, _b: Recording): number {
-  return Math.round(Math.random() * 100);
-}
-
 function useRecordingSearch(query: string) {
   return useQuery<SearchResponse>({
     queryKey: ["recording-search", query],
@@ -55,6 +71,21 @@ function useRecordingSearch(query: string) {
     },
     enabled: query.length >= 2,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+function useCompare() {
+  return useMutation<CompareResponse, Error, { id1: string; id2: string }>({
+    mutationFn: async ({ id1, id2 }) => {
+      const res = await fetch(
+        `/api/compare?recording_id_1=${encodeURIComponent(id1)}&recording_id_2=${encodeURIComponent(id2)}`,
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? `API error: ${res.status}`);
+      }
+      return res.json();
+    },
   });
 }
 
@@ -166,14 +197,129 @@ function SongPicker({
   );
 }
 
+const COMPONENT_LABELS: Record<keyof CompareComponents, string> = {
+  key: "Key",
+  tempo: "Tempo",
+  energy: "Energy",
+  loudness: "Loudness",
+  mood: "Mood",
+  timbre: "Timbre",
+  genre: "Genre",
+};
+
+function scoreColor(score: number): string {
+  if (score >= 0.7) return "bg-emerald-500";
+  if (score >= 0.4) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+function ComponentBar({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="w-20 text-sm text-gray-400 text-right shrink-0">
+        {label}
+      </span>
+      <div className="flex-1 h-3 rounded-full bg-gray-800 overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${scoreColor(value)}`}
+          style={{ width: `${Math.round(value * 100)}%` }}
+        />
+      </div>
+      <span className="w-12 text-sm text-gray-300 tabular-nums">
+        {Math.round(value * 100)}%
+      </span>
+    </div>
+  );
+}
+
+function ResultsPanel({
+  result,
+  songA,
+  songB,
+}: {
+  result: CompareResponse;
+  songA: Recording;
+  songB: Recording;
+}) {
+  return (
+    <div className="mt-10 rounded-xl border border-gray-800 bg-gray-900 p-8">
+      <div className="text-center mb-8">
+        <p className="text-sm text-gray-400 mb-1">Similarity Score</p>
+        <p className="text-6xl font-bold tabular-nums">
+          {Math.round(result.score * 100)}
+          <span className="text-2xl text-gray-500">%</span>
+        </p>
+        <p className="mt-2 text-sm text-gray-500">
+          {songA.title} vs {songB.title}
+        </p>
+        <span
+          className={`mt-2 inline-block rounded-full px-3 py-0.5 text-xs font-medium ${
+            result.is_compatible
+              ? "bg-emerald-500/20 text-emerald-400"
+              : "bg-red-500/20 text-red-400"
+          }`}
+        >
+          {result.is_compatible ? "Compatible" : "Incompatible"}
+        </span>
+      </div>
+
+      <div className="space-y-3 mb-8">
+        <h3 className="text-sm font-medium text-gray-300 mb-4">
+          Component Breakdown
+        </h3>
+        {(
+          Object.entries(COMPONENT_LABELS) as [
+            keyof CompareComponents,
+            string,
+          ][]
+        ).map(([key, label]) => (
+          <ComponentBar
+            key={key}
+            label={label}
+            value={result.components[key]}
+          />
+        ))}
+      </div>
+
+      {result.violations.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-sm font-medium text-gray-300 mb-2">Violations</h3>
+          <ul className="space-y-1">
+            {result.violations.map((v) => (
+              <li
+                key={v}
+                className="text-sm text-red-400 flex items-start gap-2"
+              >
+                <span className="shrink-0 mt-0.5">!</span>
+                {v}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {result.explanation && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-300 mb-2">
+            Explanation
+          </h3>
+          <pre className="text-xs text-gray-500 whitespace-pre-wrap font-mono bg-gray-800 rounded-lg p-4">
+            {result.explanation}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const [songA, setSongA] = useState<Recording | null>(null);
   const [songB, setSongB] = useState<Recording | null>(null);
-  const [score, setScore] = useState<number | null>(null);
+  const compare = useCompare();
 
   const handleCompare = () => {
     if (songA && songB) {
-      setScore(stubSimilarityScore(songA, songB));
+      compare.mutate({ id1: songA.id, id2: songB.id });
     }
   };
 
@@ -191,7 +337,7 @@ function App() {
             selected={songA}
             onSelect={(r) => {
               setSongA(r);
-              setScore(null);
+              compare.reset();
             }}
           />
           <SongPicker
@@ -199,7 +345,7 @@ function App() {
             selected={songB}
             onSelect={(r) => {
               setSongB(r);
-              setScore(null);
+              compare.reset();
             }}
           />
         </div>
@@ -207,24 +353,21 @@ function App() {
         <div className="text-center">
           <button
             onClick={handleCompare}
-            disabled={!songA || !songB}
+            disabled={!songA || !songB || compare.isPending}
             className="rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
           >
-            Compare
+            {compare.isPending ? "Comparing…" : "Compare"}
           </button>
         </div>
 
-        {score !== null && songA && songB && (
-          <div className="mt-10 rounded-xl border border-gray-800 bg-gray-900 p-8 text-center">
-            <p className="text-sm text-gray-400 mb-1">Similarity Score</p>
-            <p className="text-6xl font-bold tabular-nums">
-              {score}
-              <span className="text-2xl text-gray-500">%</span>
-            </p>
-            <p className="mt-4 text-sm text-gray-500">
-              {songA.title} vs {songB.title}
-            </p>
+        {compare.isError && (
+          <div className="mt-6 rounded-lg border border-red-800 bg-red-950 p-4 text-center text-sm text-red-400">
+            {compare.error.message}
           </div>
+        )}
+
+        {compare.data && songA && songB && (
+          <ResultsPanel result={compare.data} songA={songA} songB={songB} />
         )}
       </div>
     </div>

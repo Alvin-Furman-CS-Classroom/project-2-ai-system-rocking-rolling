@@ -21,6 +21,16 @@ fmt:
 fix:
     uv run ruff check --fix .
 
+[parallel]
+serve: serve-web serve-flask
+
+serve-web:
+    cd web && pnpm dev
+
+# Run the Flask API server
+serve-flask:
+    PYTHONPATH=modules/module1/src:modules/api/src uv run python -m flask --app api.app run --debug
+
 # Clean Python cache files
 clean:
     find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
