@@ -1,0 +1,9 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "Flask API for song similarity scoring."
+requires-python = ">=3.13"
+dependencies = [
+    "flask>=3.0.0",
+    "requests>=2.32.0",
+]
