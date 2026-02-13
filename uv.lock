@@ -15,12 +15,14 @@ version = "0.1.0"
 source = { virtual = "modules/api" }
 dependencies = [
     { name = "flask" },
+    { name = "module1" },
     { name = "requests" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "flask", specifier = ">=3.0.0" },
+    { name = "module1", editable = "modules/module1" },
     { name = "requests", specifier = ">=2.32.0" },
 ]
 
@@ -215,7 +217,7 @@ wheels = [
 [[package]]
 name = "module1"
 version = "0.1.0"
-source = { virtual = "modules/module1" }
+source = { editable = "modules/module1" }
 dependencies = [
     { name = "requests" },
 ]
