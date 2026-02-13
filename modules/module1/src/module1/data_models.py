@@ -143,6 +143,11 @@ class TrackFeatures:
 class UserPreferences:
     """User-configurable preferences that influence compatibility scoring."""
 
+    # TODO: Constraint fields (min_bpm, max_bpm, allowed_keys, max_energy_jump,
+    # prefer_increasing_energy, prefer_decreasing_energy) are reserved for
+    # Module 2 (Beam Search) and Module 3 (Simulated Annealing) where they
+    # will be used as search constraints and optimization objectives.
+
     # Tempo preferences
     min_bpm: float | None = None
     max_bpm: float | None = None
