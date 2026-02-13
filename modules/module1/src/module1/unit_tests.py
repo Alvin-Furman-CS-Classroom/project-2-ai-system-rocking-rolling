@@ -61,7 +61,7 @@ def test_same_piece_twice():
     
     result = kb.get_compatibility(track, track)
     
-    print(f"Cyndi Lauper - Same track twice")
+    print("Cyndi Lauper - Same track twice")
     print(f"  Compatibility: {result.probability:.1%}")
     print(f"  Is Compatible: {result.is_compatible}")
     print(f"  Penalty: {result.penalty:.3f}")
@@ -266,7 +266,7 @@ def test_with_preferences():
     
     result = kb.get_compatibility(track1, track2)
     
-    print(f"Preferences: Prefer relaxed/sad mood, consistent tempo")
+    print("Preferences: Prefer relaxed/sad mood, consistent tempo")
     print(f"Track 1: Beethoven - {info1['title']}")
     print(f"Track 2: Beethoven - {info2['title']}")
     print(f"\nCompatibility: {result.probability:.1%}")

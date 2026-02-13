@@ -18,7 +18,7 @@ def _print_result(track_a: TrackFeatures, track_b: TrackFeatures, result: Transi
     print(f"Overall compatibility: {result.probability:.1%}")
     print(f"A* penalty:           {result.penalty:.3f}")
     print(f"Is compatible:        {result.is_compatible}")
-    print(f"\nComponent scores:")
+    print("\nComponent scores:")
     for name, score in [
         ("Key", result.key_compatibility),
         ("Tempo", result.tempo_compatibility),
@@ -30,7 +30,7 @@ def _print_result(track_a: TrackFeatures, track_b: TrackFeatures, result: Transi
     ]:
         print(f"  {name:12s}: {score:.1%}")
     if result.violations:
-        print(f"\nViolations:")
+        print("\nViolations:")
         for v in result.violations:
             print(f"  - {v}")
     print(f"\nExplanation:\n{result.explanation}")

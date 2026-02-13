@@ -48,7 +48,7 @@ def get_song_json(song_name: str):
 
         # 3. AcousticBrainz Fetch
         time.sleep(1.1) # Respect the rate limit again
-        ab_url = f"https://acousticbrainz.org/api/v1/low-level"
+        ab_url = "https://acousticbrainz.org/api/v1/low-level"
         ab_params = {"recording_ids": recording_id}
 
         ab_response = requests.get(ab_url, params=ab_params, headers=headers, timeout=15)
