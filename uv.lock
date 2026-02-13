@@ -6,6 +6,7 @@ requires-python = ">=3.13"
 members = [
     "api",
     "module1",
+    "module2",
     "wave-guide",
 ]
 
@@ -224,6 +225,21 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "requests", specifier = ">=2.31.0" }]
+
+[[package]]
+name = "module2"
+version = "0.1.0"
+source = { virtual = "modules/module2" }
+dependencies = [
+    { name = "module1" },
+    { name = "requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "module1", editable = "modules/module1" },
+    { name = "requests", specifier = ">=2.31.0" },
+]
 
 [[package]]
 name = "numpy"
