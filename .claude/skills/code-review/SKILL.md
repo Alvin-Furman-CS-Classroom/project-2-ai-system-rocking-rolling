@@ -1,3 +1,8 @@
+---
+name: code-review
+description: Review code quality based on rubric.
+---
+
 # AI System Code Review (Rubric-Based)
 
 Use this skill to review the project against the AI System rubric and provide actionable feedback before each checkpoint.
