@@ -1,0 +1,11 @@
+[project]
+name = "module3"
+version = "0.1.0"
+description = "Playlist assembly, Essentia analysis, user modeling, and explanation"
+readme = "CHANGELOG.md"
+requires-python = ">=3.13"
+dependencies = ["requests>=2.31.0", "module1", "module2"]
+
+[tool.uv.sources]
+module1 = { workspace = true }
+module2 = { workspace = true }

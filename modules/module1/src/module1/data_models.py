@@ -57,6 +57,21 @@ class TrackFeatures:
     genre_rosamerica: tuple[str, float] | None = None  # ("cla"/"dan"/"hip"/etc., prob)
     genre_rosamerica_all: dict[str, float] | None = None  # Full 8-class distribution
 
+    # ListenBrainz enrichment data (populated by Module 2's LB client)
+    tags: dict[str, int] | None = None  # User-generated tags with occurrence counts
+    artist_mbid: str | None = None  # MusicBrainz artist ID for similarity lookups
+    popularity_listen_count: int | None = None  # Total listen count from ListenBrainz
+    popularity_user_count: int | None = None  # Unique listener count from ListenBrainz
+
+    # MusicBrainz editorial metadata (populated by Module 2's MB client)
+    mb_artist_related_mbids: set[str] | None = (
+        None  # Related artist MBIDs (members, collaborators, producers)
+    )
+    mb_release_year: int | None = None  # First release year from MusicBrainz
+    mb_genre_tags: list[str] | None = (
+        None  # Curated genre/tag taxonomy from MusicBrainz
+    )
+
     @property
     def has_highlevel_data(self) -> bool:
         """Check if this track has highlevel classifier data."""
@@ -114,7 +129,9 @@ class TrackFeatures:
     @property
     def is_aggressive(self) -> bool:
         """Check if track classified as aggressive."""
-        return self.mood_aggressive is not None and self.mood_aggressive[0] == "aggressive"
+        return (
+            self.mood_aggressive is not None and self.mood_aggressive[0] == "aggressive"
+        )
 
     @property
     def is_relaxed(self) -> bool:
@@ -166,14 +183,27 @@ class UserPreferences:
     target_moods: list[str] | None = None
     avoid_moods: list[str] | None = None
 
-    # Weights for combining scores (should sum to ~1.0)
+    # Weights for combining scores (auto-normalized, no need to sum to 1.0)
     key_weight: float = 0.15
     tempo_weight: float = 0.20
     energy_weight: float = 0.15
     loudness_weight: float = 0.05
     mood_weight: float = 0.15
-    timbre_weight: float = 0.20
-    genre_weight: float = 0.10
+    timbre_weight: float = 0.15
+    genre_weight: float = 0.05
+    tag_weight: float = (
+        0.10  # ListenBrainz user-generated tags (richer than rosamerica)
+    )
+    popularity_weight: float = 0.0  # Off by default — discovery-friendly
+    artist_weight: float = 0.10  # MusicBrainz artist relationships (Korzeniowski 2021)
+    era_weight: float = 0.05  # MusicBrainz release year proximity (Schweiger 2025)
+    mb_genre_weight: float = (
+        0.0  # MusicBrainz curated genres — off by default (LB tags overlap)
+    )
+
+    # Discovery mode: suppresses popularity signals in heuristic.
+    # Module 2 uses this to widen candidate generation (mode=hard, low pop_begin).
+    discovery_mode: bool = False
 
 
 @dataclass
@@ -192,6 +222,11 @@ class TransitionResult:
     mood_compatibility: float = 0.0
     timbre_compatibility: float = 0.0
     genre_compatibility: float = 0.0
+    tag_compatibility: float = 0.0
+    popularity_compatibility: float = 0.0
+    artist_compatibility: float = 0.0
+    era_compatibility: float = 0.0
+    mb_genre_compatibility: float = 0.0
 
     violations: list[str] = field(default_factory=list)
     explanation: str = ""

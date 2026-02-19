@@ -119,7 +119,9 @@ def main() -> int:
 
     print(f"\nPlaylist: {len(playlist)} tracks")
     for i, t in enumerate(playlist):
-        print(f"  {i + 1}. {t.artist} - {t.title} (Key: {t.key} {t.scale}, BPM: {t.bpm:.0f})")
+        print(
+            f"  {i + 1}. {t.artist} - {t.title} (Key: {t.key} {t.scale}, BPM: {t.bpm:.0f})"
+        )
 
     # Reset preferences for clean validation
     kb.set_preferences(UserPreferences())

@@ -4,6 +4,7 @@ This module provides a probabilistic knowledge base for music theory rules
 using ProbLog. The public API does not expose any ProbLog types.
 """
 
+import logging
 from pathlib import Path
 
 from problog import get_evaluatable
@@ -17,6 +18,15 @@ from .data_models import (
     TransitionResult,
     UserPreferences,
 )
+from .listenbrainz_helpers import (
+    popularity_compatibility_prob,
+    tag_compatibility_prob,
+)
+from .musicbrainz_helpers import (
+    artist_compatibility_prob,
+    era_compatibility_prob,
+    mb_genre_compatibility_prob,
+)
 from .rules_helpers import (
     circle_of_fifths_distance,
     energy_compatibility_prob,
@@ -28,6 +38,71 @@ from .rules_helpers import (
     timbre_compatibility_prob,
 )
 
+
+logger = logging.getLogger(__name__)
+
+
+_PROBLOG_BACKEND: str = "kbest"  # Set after MusicKnowledgeBase is defined
+
+
+def _probe_backend(name: str) -> bool:
+    """Test a ProbLog backend with a real 12-dimension compatibility query.
+
+    Simple probes (single-fact programs) pass even when dsharp segfaults on
+    real workloads, so we must exercise the full music_theory.pl rules with
+    annotated disjunctions to get a reliable signal.
+    """
+    from .data_models import TrackFeatures
+
+    global _PROBLOG_BACKEND
+    _PROBLOG_BACKEND = name
+
+    kb = MusicKnowledgeBase()
+    t1 = TrackFeatures(
+        mbid="probe_a", key="C", scale="major", bpm=120.0,
+        energy_low=0.3, energy_high=0.7,
+        mood_happy=("happy", 0.7), mood_sad=("sad", 0.3),
+        genre_rosamerica=("rock", 0.8),
+        genre_rosamerica_all={"rock": 0.8, "pop": 0.2},
+        mfcc=[0.0] * 13,
+    )
+    t2 = TrackFeatures(
+        mbid="probe_b", key="G", scale="major", bpm=125.0,
+        energy_low=0.25, energy_high=0.65,
+        mood_happy=("happy", 0.6), mood_sad=("sad", 0.4),
+        genre_rosamerica=("rock", 0.6),
+        genre_rosamerica_all={"rock": 0.6, "jazz": 0.4},
+        mfcc=[0.0] * 13,
+    )
+    result = kb.get_compatibility(t1, t2)
+    return result.probability > 0.0
+
+
+def _detect_problog_backend() -> str:
+    """Auto-detect the best available ProbLog evaluation backend.
+
+    Preference order:
+        1. ddnnf — fastest, uses compiled dsharp binary
+        2. sdd   — fast, uses pysdd (pip install pysdd), no binary compat issues
+        3. kbest — pure Python fallback, slowest but always works
+
+    Returns:
+        Backend name string.
+    """
+    for backend in ("ddnnf", "sdd", "kbest"):
+        try:
+            if _probe_backend(backend):
+                if backend != "ddnnf":
+                    logger.info("ProbLog using '%s' backend.", backend)
+                return backend
+        except Exception:
+            continue
+
+    logger.warning(
+        "All compiled ProbLog backends failed — using kbest (pure Python). "
+        "Inference will be slower."
+    )
+    return "kbest"
 
 class MusicKnowledgeBase:
     """
@@ -131,38 +206,67 @@ class MusicKnowledgeBase:
             ("mood_compatible", Term("mood_compatible", t1, t2)),
             ("timbre_compatible", Term("timbre_compatible", t1, t2)),
             ("genre_compatible", Term("genre_compatible", t1, t2)),
+            ("tag_compatible", Term("tag_compatible", t1, t2)),
+            ("popularity_compatible", Term("popularity_compatible", t1, t2)),
+            ("artist_compatible", Term("artist_compatible", t1, t2)),
+            ("era_compatible", Term("era_compatible", t1, t2)),
+            ("mb_genre_compatible", Term("mb_genre_compatible", t1, t2)),
         ]
 
         query_terms = [q[1] for q in queries]
         lf = self._engine.ground_all(db, queries=query_terms)
-        results = get_evaluatable().create_from(lf).evaluate()
+        results = get_evaluatable(name=_PROBLOG_BACKEND).create_from(lf).evaluate()
 
         # Extract probabilities
+        # kbest backend returns (probability, bound) tuples; ddnnf returns floats
         probs = {}
         for name, term in queries:
-            probs[name] = float(results.get(term, 0.0))
+            val = results.get(term, 0.0)
+            probs[name] = float(val[0]) if isinstance(val, tuple) else float(val)
 
-        # Compute overall probability as weighted average of components
+        # Compute overall probability as normalized weighted average.
+        # Normalization means weights don't need to sum to 1.0 — users can
+        # add tag/popularity weights without rebalancing everything else.
+        # In discovery mode, popularity is suppressed.
         weights = self._preferences
-        probability = (
-            weights.key_weight * probs["key_compatible"]
-            + weights.tempo_weight * probs["tempo_compatible"]
-            + weights.energy_weight * probs["energy_compatible"]
-            + weights.loudness_weight * probs["loudness_compatible"]
-            + weights.mood_weight * probs["mood_compatible"]
-            + weights.timbre_weight * probs["timbre_compatible"]
-            + weights.genre_weight * probs["genre_compatible"]
+        effective_pop_weight = (
+            0.0 if weights.discovery_mode else weights.popularity_weight
         )
+
+        weight_score_pairs = [
+            (weights.key_weight, probs["key_compatible"]),
+            (weights.tempo_weight, probs["tempo_compatible"]),
+            (weights.energy_weight, probs["energy_compatible"]),
+            (weights.loudness_weight, probs["loudness_compatible"]),
+            (weights.mood_weight, probs["mood_compatible"]),
+            (weights.timbre_weight, probs["timbre_compatible"]),
+            (weights.genre_weight, probs["genre_compatible"]),
+            (weights.tag_weight, probs["tag_compatible"]),
+            (effective_pop_weight, probs["popularity_compatible"]),
+            (weights.artist_weight, probs["artist_compatible"]),
+            (weights.era_weight, probs["era_compatible"]),
+            (weights.mb_genre_weight, probs["mb_genre_compatible"]),
+        ]
+
+        total_weight = sum(w for w, _ in weight_score_pairs)
+        if total_weight > 0:
+            probability = sum(w * s for w, s in weight_score_pairs) / total_weight
+        else:
+            probability = 0.0
 
         # Build violations list
         violations = []
         component_threshold = 0.3
         if probs["key_compatible"] < component_threshold:
-            violations.append(f"Key incompatible: {track1.key} {track1.scale} -> {track2.key} {track2.scale}")
+            violations.append(
+                f"Key incompatible: {track1.key} {track1.scale} -> {track2.key} {track2.scale}"
+            )
         if probs["tempo_compatible"] < component_threshold:
             violations.append(f"Tempo jump: {track1.bpm:.0f} -> {track2.bpm:.0f} BPM")
         if probs["energy_compatible"] < component_threshold:
-            violations.append(f"Energy jump: {track1.energy_score:.2f} -> {track2.energy_score:.2f}")
+            violations.append(
+                f"Energy jump: {track1.energy_score:.2f} -> {track2.energy_score:.2f}"
+            )
         if probs["mood_compatible"] < component_threshold:
             violations.append("Mood incompatible")
 
@@ -180,6 +284,11 @@ class MusicKnowledgeBase:
             mood_compatibility=probs["mood_compatible"],
             timbre_compatibility=probs["timbre_compatible"],
             genre_compatibility=probs["genre_compatible"],
+            tag_compatibility=probs["tag_compatible"],
+            popularity_compatibility=probs["popularity_compatible"],
+            artist_compatibility=probs["artist_compatible"],
+            era_compatibility=probs["era_compatible"],
+            mb_genre_compatibility=probs["mb_genre_compatible"],
             violations=violations,
             explanation=explanation,
         )
@@ -278,7 +387,9 @@ class MusicKnowledgeBase:
         # Key facts: has_key(track_id, key, scale, strength)
         key_term = Term(normalize_key(track.key))
         scale_term = Term(track.scale)
-        facts += Term("has_key", tid, key_term, scale_term, Constant(track.key_strength))
+        facts += Term(
+            "has_key", tid, key_term, scale_term, Constant(track.key_strength)
+        )
 
         # BPM: has_bpm(track_id, bpm)
         facts += Term("has_bpm", tid, Constant(track.bpm))
@@ -335,7 +446,10 @@ class MusicKnowledgeBase:
 
         # Key: Krumhansl-Kessler profile correlation (1990)
         p_key = key_compatibility_prob(
-            track1.key, track1.scale, track2.key, track2.scale,
+            track1.key,
+            track1.scale,
+            track2.key,
+            track2.scale,
         )
         facts += Term("key_compatible", t1, t2, p=Constant(p_key))
 
@@ -345,21 +459,68 @@ class MusicKnowledgeBase:
 
         # Timbre: Bhattacharyya coefficient (Aucouturier & Pachet 2002)
         p_timbre = timbre_compatibility_prob(
-            track1.mfcc, track2.mfcc, track1.mfcc_cov, track2.mfcc_cov,
+            track1.mfcc,
+            track2.mfcc,
+            track1.mfcc_cov,
+            track2.mfcc_cov,
         )
         facts += Term("timbre_compatible", t1, t2, p=Constant(p_timbre))
 
         # Loudness: Gaussian decay
         p_loud = loudness_compatibility_prob(
-            track1.average_loudness, track2.average_loudness,
+            track1.average_loudness,
+            track2.average_loudness,
         )
         facts += Term("loudness_compatible", t1, t2, p=Constant(p_loud))
 
         # Energy: Gaussian decay
         p_energy = energy_compatibility_prob(
-            track1.energy_score, track2.energy_score,
+            track1.energy_score,
+            track2.energy_score,
         )
         facts += Term("energy_compatible", t1, t2, p=Constant(p_energy))
+
+        # Tag: cosine similarity of ListenBrainz user-generated tag vectors
+        p_tag = tag_compatibility_prob(track1.tags, track2.tags)
+        facts += Term("tag_compatible", t1, t2, p=Constant(p_tag))
+        if track1.tags:
+            facts += Term("has_tag_data", t1)
+        if track2.tags:
+            facts += Term("has_tag_data", t2)
+
+        # Popularity: log-Gaussian decay on ListenBrainz listen counts
+        p_pop = popularity_compatibility_prob(
+            track1.popularity_listen_count,
+            track2.popularity_listen_count,
+        )
+        facts += Term("popularity_compatible", t1, t2, p=Constant(p_pop))
+        if track1.popularity_listen_count is not None:
+            facts += Term("has_popularity_data", t1)
+        if track2.popularity_listen_count is not None:
+            facts += Term("has_popularity_data", t2)
+
+        # Artist: graph topology on MusicBrainz artist relationships
+        p_artist = artist_compatibility_prob(
+            track1.artist_mbid,
+            track2.artist_mbid,
+            track1.mb_artist_related_mbids,
+            track2.mb_artist_related_mbids,
+        )
+        facts += Term("artist_compatible", t1, t2, p=Constant(p_artist))
+
+        # Era: Gaussian decay on release year difference
+        p_era = era_compatibility_prob(
+            track1.mb_release_year,
+            track2.mb_release_year,
+        )
+        facts += Term("era_compatible", t1, t2, p=Constant(p_era))
+
+        # MusicBrainz genre: Jaccard similarity on curated genre taxonomy
+        p_mb_genre = mb_genre_compatibility_prob(
+            track1.mb_genre_tags,
+            track2.mb_genre_tags,
+        )
+        facts += Term("mb_genre_compatible", t1, t2, p=Constant(p_mb_genre))
 
     def _add_preference_facts(self, facts: SimpleProgram) -> None:
         """Add user preference facts to ProbLog."""
@@ -389,6 +550,13 @@ class MusicKnowledgeBase:
                 best_prob = prob
 
         return best_mood
+
+    def _get_top_tags(self, track: TrackFeatures, n: int = 3) -> list[str]:
+        """Get the top-N tags by count for display."""
+        if not track.tags:
+            return ["no tags"]
+        sorted_tags = sorted(track.tags.items(), key=lambda x: x[1], reverse=True)
+        return [tag for tag, _ in sorted_tags[:n]]
 
     def _build_explanation(
         self,
@@ -439,4 +607,50 @@ class MusicKnowledgeBase:
         g2 = track2.genre_rosamerica[0] if track2.genre_rosamerica else "unknown"
         lines.append(f"Genre: {g1} -> {g2} (P={probs['genre_compatible']:.0%})")
 
+        # Tags (ListenBrainz)
+        if track1.tags or track2.tags:
+            t1_top = self._get_top_tags(track1, 3)
+            t2_top = self._get_top_tags(track2, 3)
+            lines.append(
+                f"Tags: [{', '.join(t1_top)}] -> [{', '.join(t2_top)}] "
+                f"(P={probs['tag_compatible']:.0%})"
+            )
+
+        # Popularity (ListenBrainz)
+        if (
+            track1.popularity_listen_count is not None
+            or track2.popularity_listen_count is not None
+        ):
+            p1 = track1.popularity_listen_count or 0
+            p2 = track2.popularity_listen_count or 0
+            lines.append(
+                f"Popularity: {p1:,} -> {p2:,} listens "
+                f"(P={probs['popularity_compatible']:.0%})"
+            )
+
+        # Artist (MusicBrainz)
+        a1 = track1.artist or track1.artist_mbid or "unknown"
+        a2 = track2.artist or track2.artist_mbid or "unknown"
+        lines.append(f"Artist: {a1} -> {a2} (P={probs['artist_compatible']:.0%})")
+
+        # Era (MusicBrainz)
+        if track1.mb_release_year is not None or track2.mb_release_year is not None:
+            y1 = track1.mb_release_year or "?"
+            y2 = track2.mb_release_year or "?"
+            lines.append(f"Era: {y1} -> {y2} (P={probs['era_compatible']:.0%})")
+
+        # MusicBrainz genres
+        if track1.mb_genre_tags or track2.mb_genre_tags:
+            g1 = track1.mb_genre_tags[:3] if track1.mb_genre_tags else ["none"]
+            g2 = track2.mb_genre_tags[:3] if track2.mb_genre_tags else ["none"]
+            lines.append(
+                f"MB Genres: [{', '.join(g1)}] -> [{', '.join(g2)}] "
+                f"(P={probs['mb_genre_compatible']:.0%})"
+            )
+
         return "\n".join(lines)
+
+
+# Run detection after MusicKnowledgeBase is defined, since the probe
+# instantiates it and calls get_compatibility().
+_PROBLOG_BACKEND = _detect_problog_backend()
