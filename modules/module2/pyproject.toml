@@ -1,10 +1,10 @@
 [project]
 name = "module2"
 version = "0.1.0"
-description = "Add your description here"
+description = "Beam search path finding for playlist generation"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["requests>=2.31.0", "module1"]
+dependencies = ["requests>=2.31.0", "module1", "tenacity>=8.0.0"]
 
 [tool.uv.sources]
 module1 = { workspace = true }
