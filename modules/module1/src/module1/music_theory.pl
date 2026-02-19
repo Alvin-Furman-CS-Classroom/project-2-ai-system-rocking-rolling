@@ -5,10 +5,18 @@
 % This file contains RULES and DEFAULT CLAUSES only.
 % Facts are generated programmatically by the Python MusicKnowledgeBase class.
 %
-% v6: Key, tempo, energy, loudness, timbre compatibility probabilities are
+% v8: Key, tempo, energy, loudness, timbre compatibility probabilities are
 %     computed in Python using research-grounded continuous functions and
 %     asserted as probabilistic facts. ProbLog handles mood (noisy-OR)
 %     and genre (dot product via annotated disjunctions).
+%
+%     ListenBrainz integration: tag_compatible and popularity_compatible
+%     are computed in Python (cosine similarity and log-Gaussian) from
+%     user-behavioral data and asserted as probabilistic facts.
+%
+%     MusicBrainz integration: artist_compatible (graph topology),
+%     era_compatible (Gaussian decay on year), mb_genre_compatible
+%     (Jaccard on curated taxonomy) — all computed in Python.
 % ============================================================================
 
 % ----------------------------------------------------------------------------
@@ -36,6 +44,22 @@ has_mood_data(_) :- fail.
 % Genre predicate default (annotated disjunctions added by Python)
 genre(_, _) :- fail.
 has_genre_data(_) :- fail.
+
+% ListenBrainz-enriched predicates — asserted as probabilistic facts from Python
+% tag_compatible: cosine similarity of user-generated tag vectors
+% popularity_compatible: log-Gaussian decay on listen count difference
+tag_compatible(_, _) :- fail.
+has_tag_data(_) :- fail.
+popularity_compatible(_, _) :- fail.
+has_popularity_data(_) :- fail.
+
+% MusicBrainz editorial metadata — asserted as probabilistic facts from Python
+% artist_compatible: graph topology on artist relationships (Korzeniowski 2021)
+% era_compatible: Gaussian decay on release year difference (Schweiger 2025)
+% mb_genre_compatible: Jaccard similarity on curated genre taxonomy (Serra 2022)
+artist_compatible(_, _) :- fail.
+era_compatible(_, _) :- fail.
+mb_genre_compatible(_, _) :- fail.
 
 % User preferences default to disabled
 pref_consistent_tempo :- fail.
@@ -75,7 +99,9 @@ genre_compatible(T1, T2) :- has_genre_data(T1), has_genre_data(T2), genre(T1, G)
 
 % ----------------------------------------------------------------------------
 % Composite Smoothness Rule
-% A smooth transition requires compatibility across all dimensions
+% A smooth transition requires compatibility across all dimensions.
+% NOTE: Python computes the actual weighted score via knowledge_base.py.
+% This rule exists for structural completeness and direct ProbLog queries.
 % ----------------------------------------------------------------------------
 
 smooth_transition(T1, T2) :-
@@ -84,7 +110,12 @@ smooth_transition(T1, T2) :-
     energy_compatible(T1, T2),
     loudness_compatible(T1, T2),
     mood_compatible(T1, T2),
-    timbre_compatible(T1, T2).
+    timbre_compatible(T1, T2),
+    tag_compatible(T1, T2),
+    popularity_compatible(T1, T2),
+    artist_compatible(T1, T2),
+    era_compatible(T1, T2),
+    mb_genre_compatible(T1, T2).
 
 % ----------------------------------------------------------------------------
 % User Preference Rules

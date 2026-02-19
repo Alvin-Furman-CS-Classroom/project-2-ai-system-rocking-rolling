@@ -3,325 +3,200 @@ UNIT TESTS EXECUTION SUMMARY
 Music Knowledge Base - Compatibility Metric Tests
 
 ==============================================================================
-TEST RESULTS OVERVIEW
+TEST RESULTS OVERVIEW (v8 — MusicBrainz Integration)
 ==============================================================================
 
-All 9 comprehensive tests executed successfully! ✓
+All 44 pytest tests pass across 3 test files.
 
-The tests validated the compatibility metric function across multiple scenarios:
-- Same piece twice
-- Different genres (Pop vs Classical, Rock vs Classical)
-- Similar genres (Classical vs Classical)
-- Same artist/different pieces
-- With and without user preferences
+Test suite covers:
+- Core compatibility metric (6 tests — test_main.py)
+- ListenBrainz tag compatibility (6 tests — test_listenbrainz.py)
+- ListenBrainz popularity compatibility (6 tests — test_listenbrainz.py)
+- Knowledge base integration with ListenBrainz (5 tests — test_listenbrainz.py)
+- MusicBrainz artist compatibility (5 tests — test_musicbrainz.py)
+- MusicBrainz era compatibility (6 tests — test_musicbrainz.py)
+- MusicBrainz genre compatibility (6 tests — test_musicbrainz.py)
+- Knowledge base integration with MusicBrainz (4 tests — test_musicbrainz.py)
+
+Additionally, 9 manual scenario tests exist in unit_tests.py (not pytest-collected).
 
 ==============================================================================
-DETAILED RESULTS
+PYTEST RESULTS — test_main.py (6 tests)
 ==============================================================================
 
-TEST 1: Same Piece Twice (Cyndi Lauper)
-──────────────────────────────────────────────────────────────────────────
-✓ PASS: Compatibility = 91.8%
+test_main                           PASSED  — end-to-end demo runs without error
+test_cindy_lauper_vs_pink_floyd     PASSED  — pop vs rock compatibility
+test_cindy_lauper_vs_beethoven      PASSED  — pop vs classical compatibility
+test_beethoven_vs_beethoven         PASSED  — same-genre classical compatibility
+test_beethoven_lowlevel_only        PASSED  — graceful degradation without highlevel
+test_symphony_35_vs_itself          PASSED  — identical track self-compatibility
 
-Result: When comparing the SAME track to itself, the compatibility metric
-correctly returned 91.8%, indicating perfect/near-perfect compatibility.
-This validates that the metric correctly identifies identical pieces.
+==============================================================================
+PYTEST RESULTS — test_listenbrainz.py (17 tests)
+==============================================================================
 
-Component Scores:
-  - Key:       95.0% (ensures harmonic match)
-  - Tempo:     95.0% (rhythm consistency)
-  - Energy:    90.0% (volume/intensity match)
-  - Loudness:  90.0% (normalized volume)
-  - Mood:      90.0% (emotional consistency)
-  - Timbre:    90.0% (tonal quality match)
+Tag Compatibility (cosine similarity on user-generated tag vectors):
+  test_tag_same_tags_perfect_similarity    PASSED  — identical tags > 0.99
+  test_tag_similar_genres_high_similarity   PASSED  — rock/alt overlap 0.6-1.0
+  test_tag_different_genres_low_similarity  PASSED  — rock vs classical < 0.2
+  test_tag_missing_data_returns_neutral     PASSED  — None → 0.5
+  test_tag_empty_dicts_returns_neutral      PASSED  — {} → 0.5
+  test_tag_single_shared_tag               PASSED  — one shared tag > 0.7
 
-Expected: >70% ✓
-Actual:   91.8% ✓✓
+Popularity Compatibility (Gaussian decay on log-scale listen count diff):
+  test_popularity_same_count               PASSED  — same count > 0.99
+  test_popularity_same_tier                PASSED  — 10K vs 12K > 0.95
+  test_popularity_10x_difference           PASSED  — 1K vs 10K ∈ (0.4, 0.7)
+  test_popularity_1000x_difference         PASSED  — 50 vs 50K < 0.05
+  test_popularity_missing_data_returns_neutral  PASSED  — None → 0.5
+  test_popularity_zero_listens_returns_neutral  PASSED  — 0 → 0.5
 
+Knowledge Base Integration:
+  test_kb_with_listenbrainz_tags           PASSED  — tags flow through to scoring
+  test_kb_tags_vs_no_tags                  PASSED  — missing tags → 0.5 neutral
+  test_kb_discovery_mode_suppresses_popularity  PASSED  — discovery > normal when pop differs
+  test_kb_weight_normalization             PASSED  — doubled weights normalize to same score
+  test_kb_tag_weight_affects_scoring       PASSED  — higher tag weight + different tags → lower score
 
-TEST 2: Pop vs Classical (Different Artists)
-──────────────────────────────────────────────────────────────────────────
-Track 1: Cyndi Lauper - "Girls Just Want to Have Fun" (New Wave)
-Track 2: Mozart - Symphony no. 35 (Classical)
+==============================================================================
+PYTEST RESULTS — test_musicbrainz.py (21 tests)
+==============================================================================
 
-Compatibility = 40.2%
+Artist Compatibility (graph topology on artist relationships):
+  test_artist_same_artist                  PASSED  — same MBID → 0.95
+  test_artist_related_via_first            PASSED  — 1-hop related → 0.70
+  test_artist_related_via_second           PASSED  — 1-hop related (reverse) → 0.70
+  test_artist_no_relationship              PASSED  — unrelated → 0.50
+  test_artist_missing_data_returns_neutral PASSED  — None → 0.5
 
-Result: The significantly lower compatibility (40.2%) correctly reflects
-these are different genres with different characteristics. However, some
-compatibility remains suggested by:
-  - Similarly high moods (both uplifting)
-  - Moderate energy levels
-  
-Component Scores:
-  - Key:       20.0% (very different key relationships)
-  - Tempo:     10.0% (tempo mismatch common in pop vs classical)
-  - Energy:    70.0% (both have moderate energy)
-  - Loudness:  15.0% (very different loudness profiles)
-  - Mood:      60.0% (both have positive/major moods)
-  - Timbre:    50.0% (partial tonal similarity)
+Era Compatibility (Gaussian decay on release year difference, σ=5yr):
+  test_era_same_year                       PASSED  — same year > 0.99
+  test_era_3_years_apart                   PASSED  — 3yr apart ∈ (0.75, 0.90)
+  test_era_5_years_apart                   PASSED  — 5yr apart ∈ (0.50, 0.70)
+  test_era_10_years_apart                  PASSED  — 10yr apart ∈ (0.05, 0.25)
+  test_era_20_years_apart                  PASSED  — 20yr apart < 0.02
+  test_era_missing_data_returns_neutral    PASSED  — None → 0.5
 
-Analysis: The metric correctly identified genre differences while finding
-common elements in mood and energy.
+MusicBrainz Genre Compatibility (Jaccard similarity on curated taxonomy):
+  test_mb_genre_identical_genres           PASSED  — identical genres → 1.0
+  test_mb_genre_partial_overlap            PASSED  — 2/4 shared → 0.5
+  test_mb_genre_no_overlap                 PASSED  — no overlap → 0.0
+  test_mb_genre_case_insensitive           PASSED  — case-insensitive match
+  test_mb_genre_missing_data_returns_neutral PASSED — None → 0.5
+  test_mb_genre_empty_lists_returns_neutral PASSED  — [] → 0.5
 
+Knowledge Base Integration:
+  test_kb_artist_same_artist_boosts_score  PASSED  — same artist → ~0.95 component
+  test_kb_era_same_decade                  PASSED  — 4yr apart > 0.70
+  test_kb_no_mb_data_neutral_fallback      PASSED  — no MB data → ~0.5 on all 3 dims
+  test_kb_artist_weight_affects_scoring    PASSED  — weight change affects overall score
 
-TEST 3: Electronic vs Classical
-──────────────────────────────────────────────────────────────────────────
-Track 1: Cyndi Lauper - "Girls Just Want to Have Fun" (New Wave)
-Track 2: Beethoven - Symphony no. 6 (Classical)
+==============================================================================
+MANUAL SCENARIO TESTS — unit_tests.py (9 tests)
+==============================================================================
 
-Compatibility = 41.5%
+These are run via `python -m module1.unit_tests` (not collected by pytest).
+They provide verbose output with component breakdowns for manual inspection.
 
-Result: Similar to Test 2, showing that genre differences result in
-lower compatibility (~41%), but not impossibly low.
+Test 1: Same piece (Cyndi Lauper) — >70% ✓
+Test 2: Pop vs Classical (different artists)
+Test 3: Electronic vs Classical
+Test 4: Similar classical pieces (Beethoven x2)
+Test 5: Rock vs Classical (Pink Floyd vs Beethoven)
+Test 6: Different classical pieces
+Test 7: With user preferences (relaxed mood)
+Test 8: Rock piece (Pink Floyd) twice — >70% ✓
+Test 9: Pop vs Classical (repeat)
 
-Key Finding: The tempo is slightly more compatible (35%) than with Mozart,
-suggesting these pieces might have more rhythmic overlap.
+==============================================================================
+SCORING DIMENSIONS (v8)
+==============================================================================
 
+12 compatibility dimensions, all computed as probabilities in [0, 1]:
 
-TEST 4: Similar Classical Pieces (Beethoven x2)
-──────────────────────────────────────────────────────────────────────────
-Track 1: Mozart - Symphony no. 35 (Classical)
-Track 2: Beethoven - Symphony no. 6 (Classical)
+Content-based (AcousticBrainz):
+  1.  Key         — Krumhansl-Kessler profile correlation (weight: 0.15)
+  2.  Tempo       — Weber's law Gaussian decay (weight: 0.20)
+  3.  Energy      — Gaussian decay on spectral bands (weight: 0.15)
+  4.  Loudness    — Gaussian decay on 0-1 scale (weight: 0.05)
+  5.  Mood        — ProbLog noisy-OR over 6 mood classifiers (weight: 0.15)
+  6.  Timbre      — Bhattacharyya coefficient on MFCC (weight: 0.15)
+  7.  Genre       — ProbLog dot product on rosamerica 8-class (weight: 0.05)
 
-Compatibility = 74.2%
+User-behavioral (ListenBrainz):
+  8.  Tags        — Cosine similarity on user-generated tag vectors (weight: 0.10)
+  9.  Popularity  — Log-Gaussian decay on listen counts (weight: 0.00, off by default)
 
-Result: When both pieces are in the same genre (Classical), compatibility
-jumps to 74.2% - significantly higher than cross-genre comparisons!
+Editorial/structural (MusicBrainz) — NEW in v8:
+  10. Artist      — Graph topology on artist relationships (weight: 0.10)
+  11. Era         — Gaussian decay on release year difference (weight: 0.05)
+  12. MB Genre    — Jaccard similarity on curated genre taxonomy (weight: 0.00, off by default)
 
-Component Scores:
-  - Key:       20.0% (classical pieces often in different keys)
-  - Tempo:     95.0% (both have consistent classical tempos)
-  - Energy:    90.0% (similar orchestral energy)
-  - Loudness:  45.0% (some variation in how pieces are mixed)
-  - Mood:      90.0% (both evoke similar classical moods)
-  - Timbre:    70.0% (orchestral instruments overlap)
-
-Analysis: Same-genre pieces show strong compatibility primarily through
-tempo, energy, and mood consistency.
-
-
-TEST 5: Rock vs Classical (Genre Extremes)
-──────────────────────────────────────────────────────────────────────────
-Track 1: Pink Floyd - "The Lost Art of Conversation" (Progressive Rock)
-Track 2: Mozart - Symphony no. 35 (Classical)
-
-Compatibility = 71.3%
-
-Result: Surprisingly, Rock and Classical show 71.3% compatibility!
-This suggests the metric finds common ground across extreme genre boundaries.
-
-Component Scores:
-  - Key:       10.0% (very different harmonic structures)
-  - Tempo:     95.0% (both moderately paced)
-  - Energy:    70.0% (both have substantial dynamic range)
-  - Loudness:  75.0% (orchestral rock and orchestra have similar loudness)
-  - Mood:      90.0% (both introspective/philosophical moods)
-  - Timbre:    70.0% (instrumental quality overlap)
-
-Key Insight: Tempo, loudness, mood, and timbre provide cross-genre
-compatibility, while harmonic differences (keys) create divergence.
-
-
-TEST 6: Different Classical Pieces (Beethoven)
-──────────────────────────────────────────────────────────────────────────
-Track 1: Mozart - Symphony no. 35 (Classical)
-Track 2: Beethoven - Symphony no. 6 (Classical)
-
-Compatibility = 74.2%
-
-Result: Identical to Test 4 (both are Classical symphonies), confirming
-the consistency of the metric across similar genre pairs.
-
-
-TEST 7: With User Preferences (Relaxed/Sad Mood)
-──────────────────────────────────────────────────────────────────────────
-Track 1: Mozart - Symphony no. 35
-Track 2: Beethoven - Symphony no. 6
-
-Preferences: target_moods=["relaxed", "sad"], mood_weight=0.25
-
-Compatibility = 83.2% (increased from 74.2%)
-
-Result: Use preferences INCREASED compatibility from 74.2% to 83.2%!
-This demonstrates that user preferences effectively enhance the metric
-when both pieces match the user's mood targets.
-
-Why the increase?
-- Increased mood_weight from 0.20 to 0.25
-- Both symphonies classified as relaxed/moderately sad
-- This elevated the mood_compatibility weight in final calculation
-
-Analysis: User preferences provide a way to personalize the compatibility
-metric based on listening context.
-
-
-TEST 8: Rock Piece Twice (Pink Floyd)
-──────────────────────────────────────────────────────────────────────────
-Track: Pink Floyd - "The Lost Art of Conversation"
-
-Compatibility = 91.8%
-
-✓ PASS: Same piece has high compatibility (>70%)
-
-Result: Consistent with Test 1 - same piece returns ~92% compatibility.
-All components at 90%+ when comparing track to itself.
-
-
-TEST 9: Pop vs Classical (Repeat)
-──────────────────────────────────────────────────────────────────────────
-Track 1: Cyndi Lauper - "Girls Just Want to Have Fun"
-Track 2: Beethoven - Symphony no. 6
-
-Compatibility = 41.5%
-
-Result: Confirms Test 3 results - cross-genre compatibility remains in the
-40-41% range for similar genre pairs.
+All weights auto-normalize. Discovery mode forces popularity weight to 0.
 
 ==============================================================================
 KEY FINDINGS
 ==============================================================================
 
 1. SAME PIECE COMPARISON: ✓
-   Identical pieces achieve ~92% compatibility
-   - All component scores consistently at 90%+
-   - Confirms baseline algorithm works correctly
+   Identical pieces achieve ~92% compatibility across all dimensions.
 
 2. SAME GENRE COMPATIBILITY: ✓
-   Classical + Classical = 74.2%
-   - Tempo is strongest component (95%)
-   - Mood and energy also strong (90%)
-   - Key differences remain low (20%) due to different keys
+   Classical + Classical = ~74%. Tempo, mood, and energy are primary signals.
 
 3. DIFFERENT GENRE COMPATIBILITY: ✓
-   Pop/New Wave + Classical = 40-41%
-   Rock + Classical = 71% (interesting finding!)
-   - Shows cross-genre compatibility exists through shared
-     temporal and emotional characteristics
-   - Rock surprisingly compatible with Classical
+   Pop vs Classical = 40-41%. Rock vs Classical = ~71%.
 
-4. USER PREFERENCES WORK: ✓
-   Mood-focused preferences increased compatibility
-   from 74.2% → 83.2%
-   - Demonstrates personalization effectiveness
-   - Can guide playlist curation based on mood
+4. USER PREFERENCES: ✓
+   Mood-focused preferences increase compatibility (74% → 83%).
 
-5. METRIC VALIDATION PASSED: ✓
-   - Same pieces: high (92%) ✓
-   - Same genre: moderate-high (74%) ✓
-   - Different genre: low-moderate (40-71%) ✓
-   - With preferences: increased scores ✓
+5. LISTENBRAINZ TAG INTEGRATION: ✓
+   - Identical tags: >99%. Similar genres: 60-100%. Different genres: <20%.
+   - Missing data gracefully falls back to 0.5 (neutral).
+   - Tag weight demonstrably affects overall scoring.
 
-==============================================================================
-COMPATIBILITY INTERPRETATION GUIDE
-==============================================================================
+6. POPULARITY INTEGRATION: ✓
+   - Same tier: >95%. 10x difference: ~52%. 1000x difference: <5%.
+   - Off by default (weight=0.0) for discovery-friendly behavior.
+   - Discovery mode correctly suppresses popularity penalty.
 
-Compatibility Score Ranges:
+7. WEIGHT NORMALIZATION: ✓
+   Doubling all weights produces identical scores (normalization is correct).
 
-90-100%: Excellent Match
-  ├─ Same piece twice
-  ├─ Identical/near-identical tracks
-  └─ Expected for perfect DJ transitions
+8. MUSICBRAINZ ARTIST COMPATIBILITY: ✓ (NEW)
+   - Same artist: 0.95. Related (1-hop): 0.70. Unrelated: 0.50 (neutral).
+   - Missing data gracefully falls back to 0.5.
+   - Weight demonstrably affects overall scoring.
 
-75-89%: Very Good Match
-  ├─ Same genre, similar style
-  ├─ With matching user preferences
-  └─ Good for playlist curation within genre
+9. MUSICBRAINZ ERA COMPATIBILITY: ✓ (NEW)
+   - Same year: >99%. 3yr: ~83%. 5yr: ~61%. 10yr: ~14%. 20yr: <2%.
+   - Missing data gracefully falls back to 0.5.
 
-60-74%: Good Match
-  ├─ Genre similarities (tempo, mood, energy align)
-  ├─ Cross-genre but similar feel
-  └─ Can work in context-sensitive playlists
-
-40-59%: Moderate Match
-  ├─ Different genres (pop vs classical)
-  ├─ Some features align, others differ
-  └─ Requires thoughtful playlist placement
-
-20-39%: Low Match
-  ├─ Very different genres
-  ├─ Conflicting tempos, keys, moods
-  └─ Avoid in seamless playlists
-
-0-19%: Poor Match
-  ├─ Completely incompatible
-  └─ Should not be adjacent in playlists
-
-==============================================================================
-ALGORITHM STRENGTHS DEMONSTRATED
-==============================================================================
-
-1. TEMPORAL CONSISTENCY (95%+ when similar)
-   - Tempo and rhythm are primary commonalities
-   - Works across genre boundaries
-
-2. EMOTIONAL RECOGNITION (60-90%+ alignment)
-   - Mood detection correlates with listening experience
-   - Often >= tempo in similarity
-
-3. GENRE AWARENESS (20%+ gap between genres)
-   - Correctly identifies genre differences
-   - Key relationships the primary discriminator
-
-4. PERSONALIZATION (adjustable mood_weight)
-   - User preferences effectively influence scores
-   - Enables context-sensitive recommendations
-
-5. GRACEFUL DEGRADATION (no 0% scores)
-   - Even very different pieces find common ground
-   - Prevents hard incompatibility (useful for curation)
-
-==============================================================================
-RECOMMENDATIONS FOR USE
-==============================================================================
-
-✓ HIGH CONFIDENCE USE CASES:
-  - Playlists within same genre (74%+ compatibility)
-  - DJ mixing within genre (92%+ with same piece)
-  - Mood-based recommendations (83%+ with preferences)
-
-⚠ MODERATE CONFIDENCE USE CASES:
-  - Cross-genre playlists (40-71% compatibility)
-  - Thematic playlists (mood-focused, 60%+ expected)
-  - Discovery playlists (accepting some dissimilarity)
-
-✗ NOT RECOMMENDED:
-  - Seamless transitions for <40% compatibility
-  - Critical DJ sets without manual review
-  - Automated radio without user preferences set
-
-==============================================================================
-CONCLUSION
-==============================================================================
-
-All unit tests PASSED ✓
-
-The compatibility metric successfully:
-✓ Identifies identical pieces (91.8%)
-✓ Ranks same-genre compatibility higher (74.2%)
-✓ Reflects cross-genre differences (40-71%)
-✓ Improves with user preferences (+9%)
-✓ Provides granular component scoring
-✓ Balances technical (key, tempo) with emotional (mood) factors
-
-The algorithm is production-ready for music playlist curation with
-high confidence in same-genre contexts and graceful degradation for
-cross-genre recommendations.
+10. MUSICBRAINZ GENRE COMPATIBILITY: ✓ (NEW)
+    - Identical genres: 1.0. Partial overlap (2/4): 0.5. No overlap: 0.0.
+    - Case-insensitive. Off by default (LB tags carry genre signal).
 
 ==============================================================================
 TEST EXECUTION DETAILS
 ==============================================================================
 
-Test Framework: Python unittest-style (manual assertions)
-Date: February 13, 2026
-Status: ALL PASSED (0 failures, 9 passed)
-Total Tests: 9
+Test Framework: pytest 9.0.2
+Python: 3.13.12
+Date: February 20, 2026
+Status: ALL PASSED (0 failures, 44 passed)
+Total Tests: 44 (pytest) + 9 (manual)
+Execution Time: ~1.9s
 Success Rate: 100%
 
-Test Coverage:
-- Same piece twice:          2/2 ✓
-- Genre combinations:         4/4 ✓
-- Multi-artist scenarios:     2/2 ✓
-- User preferences:           1/1 ✓
+Test Coverage (pytest):
+- Core compatibility:          6/6   ✓
+- Tag compatibility:           6/6   ✓
+- Popularity compatibility:    6/6   ✓
+- LB KB integration:           5/5   ✓
+- Artist compatibility:        5/5   ✓ (NEW)
+- Era compatibility:           6/6   ✓ (NEW)
+- MB genre compatibility:      6/6   ✓ (NEW)
+- MB KB integration:           4/4   ✓ (NEW)
 
 Component Testing:
 - Key compatibility:          ✓
@@ -330,5 +205,14 @@ Component Testing:
 - Loudness compatibility:     ✓
 - Mood compatibility:         ✓
 - Timbre compatibility:       ✓
+- Genre compatibility:        ✓
+- Tag compatibility:          ✓
+- Popularity compatibility:   ✓
+- Artist compatibility:       ✓ (NEW)
+- Era compatibility:          ✓ (NEW)
+- MB genre compatibility:     ✓ (NEW)
+- Weight normalization:       ✓
+- Discovery mode:             ✓
 - Overall probability:        ✓
 - Is_compatible flag:         ✓
+"""

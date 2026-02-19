@@ -27,6 +27,10 @@ from .data_models import (
     UserPreferences,
 )
 from .knowledge_base import MusicKnowledgeBase
+from .listenbrainz_helpers import (
+    popularity_compatibility_prob,
+    tag_compatibility_prob,
+)
 from .main import main
 
 __all__ = [
@@ -40,6 +44,9 @@ __all__ = [
     # Data loading
     "load_track_from_files",
     "load_tracks_batch",
+    # ListenBrainz helpers
+    "tag_compatibility_prob",
+    "popularity_compatibility_prob",
     # Entry point
     "main",
 ]

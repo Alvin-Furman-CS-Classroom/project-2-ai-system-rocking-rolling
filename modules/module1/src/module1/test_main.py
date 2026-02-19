@@ -9,7 +9,9 @@ from .main import main
 TEST_FILES = Path(__file__).parent.parent.parent / "test_files"
 
 
-def _print_result(track_a: TrackFeatures, track_b: TrackFeatures, result: TransitionResult):
+def _print_result(
+    track_a: TrackFeatures, track_b: TrackFeatures, result: TransitionResult
+):
     """Print compatibility result between two tracks."""
     print(f"\n{'=' * 60}")
     print(f"Track 1: {track_a.artist} - {track_a.title}")

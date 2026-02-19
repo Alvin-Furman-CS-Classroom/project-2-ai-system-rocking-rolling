@@ -105,7 +105,11 @@ def load_track_from_data(
         TrackFeatures dataclass with extracted features
     """
     # Get metadata: prefer highlevel, fallback to lowlevel
-    mbid = _get_first_tag(highlevel, "musicbrainz_recordingid") or _get_first_tag(lowlevel, "musicbrainz_recordingid") or "unknown"
+    mbid = (
+        _get_first_tag(highlevel, "musicbrainz_recordingid")
+        or _get_first_tag(lowlevel, "musicbrainz_recordingid")
+        or "unknown"
+    )
     title = _get_first_tag(highlevel, "title") or _get_first_tag(lowlevel, "title")
     artist = _get_first_tag(highlevel, "artist") or _get_first_tag(lowlevel, "artist")
     album = _get_first_tag(highlevel, "album") or _get_first_tag(lowlevel, "album")
@@ -167,7 +171,9 @@ def load_track_from_data(
     mood_acoustic = _get_classifier(highlevel, "highlevel", "mood_acoustic")
     timbre = _get_classifier(highlevel, "highlevel", "timbre")
     genre_rosamerica = _get_classifier(highlevel, "highlevel", "genre_rosamerica")
-    genre_rosamerica_all = _get_classifier_all(highlevel, "highlevel", "genre_rosamerica")
+    genre_rosamerica_all = _get_classifier_all(
+        highlevel, "highlevel", "genre_rosamerica"
+    )
 
     return TrackFeatures(
         mbid=mbid,
