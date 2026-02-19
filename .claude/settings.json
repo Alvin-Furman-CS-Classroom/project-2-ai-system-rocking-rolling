@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.google.com)",
+      "WebFetch(domain:doc-04-34-docstext.googleusercontent.com)",
+      "WebFetch(domain:listenbrainz.readthedocs.io)",
+      "WebFetch(domain:api.listenbrainz.org)"
+    ]
+  }
+}
