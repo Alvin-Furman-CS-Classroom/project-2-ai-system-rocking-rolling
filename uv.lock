@@ -18,6 +18,7 @@ source = { virtual = "modules/api" }
 dependencies = [
     { name = "flask" },
     { name = "module1" },
+    { name = "module2" },
     { name = "requests" },
 ]
 
@@ -25,6 +26,7 @@ dependencies = [
 requires-dist = [
     { name = "flask", specifier = ">=3.0.0" },
     { name = "module1", editable = "modules/module1" },
+    { name = "module2", editable = "modules/module2" },
     { name = "requests", specifier = ">=2.32.0" },
 ]
 
