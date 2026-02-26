@@ -49,8 +49,14 @@ def _make_transition(probability: float = 0.8) -> TransitionResult:
 class MockSearchSpace:
     """Mock search space for testing the assembler."""
 
-    def __init__(self, tracks: dict[str, TrackFeatures]):
+    def __init__(self, tracks: dict[str, TrackFeatures], neighbors: dict[str, list[str]] | None = None):
         self._tracks = tracks
+        self._neighbors_cache: dict[str, list[str]] = neighbors or {
+            mbid: [m for m in tracks if m != mbid] for mbid in tracks
+        }
+
+    def get_neighbors(self, mbid: str) -> list[str]:
+        return self._neighbors_cache.get(mbid, [])
 
     def get_features(self, mbid: str) -> TrackFeatures | None:
         return self._tracks.get(mbid)
@@ -69,6 +75,9 @@ class MockSearchSpace:
 
     def get_transition_result(self, from_mbid: str, to_mbid: str) -> TransitionResult | None:
         return _make_transition()
+
+    def cache_stats(self) -> dict[str, int]:
+        return {"neighbors_cached": len(self._neighbors_cache), "features_cached": len(self._tracks)}
 
 
 class TestPlaylistAssembler(unittest.TestCase):

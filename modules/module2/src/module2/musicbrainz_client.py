@@ -22,6 +22,8 @@ class MusicBrainzConfig:
     user_agent: str = "WaveGuide/1.0 (https://github.com/waveguide)"
     request_timeout: float = 30.0
     min_request_interval: float = 1.0  # 1 req/sec enforced by MB
+    max_retries: int = 3
+    retry_backoff: float = 2.0  # Seconds; doubles each retry
 
 
 @dataclass
@@ -60,6 +62,41 @@ class MusicBrainzClient:
         if elapsed < self.config.min_request_interval:
             time.sleep(self.config.min_request_interval - elapsed)
 
+    def _request_with_retry(self, url: str, **kwargs) -> requests.Response | None:
+        """GET request with retry on transient failures (ConnectionError, Timeout).
+
+        Returns Response on success, None after all retries exhausted.
+        """
+        last_error = None
+        for attempt in range(self.config.max_retries):
+            self._rate_limit()
+            try:
+                response = self._session.get(
+                    url, timeout=self.config.request_timeout, **kwargs
+                )
+                self._last_request_time = time.time()
+                return response
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as e:
+                last_error = e
+                wait = self.config.retry_backoff * (2 ** attempt)
+                logger.warning(
+                    "MB request to %s failed (attempt %d/%d): %s — retrying in %.1fs",
+                    url, attempt + 1, self.config.max_retries, e, wait,
+                )
+                time.sleep(wait)
+            except requests.exceptions.RequestException as e:
+                logger.warning("Non-retryable MB error for %s: %s", url, e)
+                return None
+
+        logger.warning(
+            "All %d retries exhausted for %s: %s",
+            self.config.max_retries, url, last_error,
+        )
+        return None
+
     # -------------------------------------------------------------------------
     # Recording metadata
     # -------------------------------------------------------------------------
@@ -76,25 +113,22 @@ class MusicBrainzClient:
         if mbid in self._recording_cache:
             return self._recording_cache[mbid]
 
-        self._rate_limit()
-
         url = f"{self.config.base_url}/recording/{mbid}"
         params = {"inc": "releases+genres+artists", "fmt": "json"}
 
+        response = self._request_with_retry(url, params=params)
+        if response is None:
+            return RecordingMetadata()
+
+        if response.status_code == 404:
+            meta = RecordingMetadata()
+            self._recording_cache[mbid] = meta
+            return meta
+
         try:
-            response = self._session.get(
-                url, params=params, timeout=self.config.request_timeout
-            )
-            self._last_request_time = time.time()
-
-            if response.status_code == 404:
-                meta = RecordingMetadata()
-                self._recording_cache[mbid] = meta
-                return meta
-
             response.raise_for_status()
             data = response.json()
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.HTTPError, ValueError):
             logger.warning("MusicBrainz recording lookup failed for %s", mbid)
             return RecordingMetadata()
 
@@ -132,29 +166,23 @@ class MusicBrainzClient:
             chunk = uncached[i : i + 25]
             query = " OR ".join(f"rid:{m}" for m in chunk)
 
-            self._rate_limit()
-
             url = f"{self.config.base_url}/recording"
             params = {"query": query, "fmt": "json", "limit": 100}
 
-            try:
-                response = self._session.get(
-                    url, params=params, timeout=self.config.request_timeout
-                )
-                self._last_request_time = time.time()
-
-                if response.status_code != 200:
+            response = self._request_with_retry(url, params=params)
+            if response is None or response.status_code != 200:
+                if response is not None:
                     logger.warning(
                         "MB search returned %d, falling back to individual lookups",
                         response.status_code,
                     )
-                    for mbid in chunk:
-                        results[mbid] = self.get_recording_metadata(mbid)
-                    continue
+                for mbid in chunk:
+                    results[mbid] = self.get_recording_metadata(mbid)
+                continue
 
+            try:
                 data = response.json()
-            except requests.exceptions.RequestException:
-                logger.warning("MB batch search failed, falling back")
+            except ValueError:
                 for mbid in chunk:
                     results[mbid] = self.get_recording_metadata(mbid)
                 continue
@@ -279,24 +307,21 @@ class MusicBrainzClient:
         if artist_mbid in self._artist_rels_cache:
             return self._artist_rels_cache[artist_mbid]
 
-        self._rate_limit()
-
         url = f"{self.config.base_url}/artist/{artist_mbid}"
         params = {"inc": "artist-rels", "fmt": "json"}
 
+        response = self._request_with_retry(url, params=params)
+        if response is None:
+            return set()
+
+        if response.status_code == 404:
+            self._artist_rels_cache[artist_mbid] = set()
+            return set()
+
         try:
-            response = self._session.get(
-                url, params=params, timeout=self.config.request_timeout
-            )
-            self._last_request_time = time.time()
-
-            if response.status_code == 404:
-                self._artist_rels_cache[artist_mbid] = set()
-                return set()
-
             response.raise_for_status()
             data = response.json()
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.HTTPError, ValueError):
             logger.warning("MusicBrainz artist lookup failed for %s", artist_mbid)
             return set()
 

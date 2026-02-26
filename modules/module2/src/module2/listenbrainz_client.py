@@ -37,6 +37,8 @@ class ListenBrainzConfig:
     user_token: str | None = None  # Optional: improves rate limits
     request_timeout: float = 30.0
     min_request_interval: float = 0.5  # Seconds between requests
+    max_retries: int = 3
+    retry_backoff: float = 2.0  # Seconds; doubles each retry
 
 
 class ListenBrainzClient:
@@ -63,6 +65,48 @@ class ListenBrainzClient:
         if elapsed < self.config.min_request_interval:
             time.sleep(self.config.min_request_interval - elapsed)
 
+    def _request_with_retry(
+        self, method: str, url: str, **kwargs
+    ) -> requests.Response | None:
+        """HTTP request with retry on transient failures (ConnectionError, Timeout).
+
+        Returns Response on success, None after all retries exhausted.
+        """
+        last_error = None
+        for attempt in range(self.config.max_retries):
+            self._rate_limit()
+            try:
+                if method == "GET":
+                    response = self._session.get(
+                        url, timeout=self.config.request_timeout, **kwargs
+                    )
+                else:
+                    response = self._session.post(
+                        url, timeout=self.config.request_timeout, **kwargs
+                    )
+                self._last_request_time = time.time()
+                return response
+            except (
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout,
+            ) as e:
+                last_error = e
+                wait = self.config.retry_backoff * (2 ** attempt)
+                logger.warning(
+                    "Request to %s failed (attempt %d/%d): %s — retrying in %.1fs",
+                    url, attempt + 1, self.config.max_retries, e, wait,
+                )
+                time.sleep(wait)
+            except requests.exceptions.RequestException as e:
+                logger.warning("Non-retryable error for %s: %s", url, e)
+                return None
+
+        logger.warning(
+            "All %d retries exhausted for %s: %s",
+            self.config.max_retries, url, last_error,
+        )
+        return None
+
     # -------------------------------------------------------------------------
     # Neighborhood discovery (labs API)
     # -------------------------------------------------------------------------
@@ -77,30 +121,26 @@ class ListenBrainzClient:
         ),
     ) -> list[SimilarRecording]:
         """Fetch recordings similar to the given MBID from ListenBrainz labs API."""
-        self._rate_limit()
-
         payload = [{"recording_mbids": [mbid], "algorithm": algorithm}]
         url = f"{self.config.base_url}/similar-recordings/json"
 
-        try:
-            response = self._session.post(
-                url, json=payload, timeout=self.config.request_timeout
+        response = self._request_with_retry("POST", url, json=payload)
+        if response is None:
+            return []
+
+        if response.status_code == 404:
+            return []
+        if response.status_code != 200:
+            logger.warning(
+                "ListenBrainz similar-recordings returned %d for %s",
+                response.status_code,
+                mbid,
             )
-            self._last_request_time = time.time()
+            return []
 
-            if response.status_code == 404:
-                return []
-            if response.status_code != 200:
-                logger.warning(
-                    "ListenBrainz similar-recordings returned %d for %s",
-                    response.status_code,
-                    mbid,
-                )
-                return []
-
+        try:
             data = response.json()
-        except requests.exceptions.RequestException as e:
-            logger.warning("Failed to fetch similar recordings for %s: %s", mbid, e)
+        except ValueError:
             return []
 
         results: list[SimilarRecording] = []
@@ -171,11 +211,8 @@ class ListenBrainzClient:
         """Fetch similar recordings for multiple MBIDs."""
         results: dict[str, list[SimilarRecording]] = {}
         for mbid in mbids:
-            try:
-                similar = self.get_similar_recordings(mbid, count=count_per_mbid)
-                results[mbid] = similar
-            except requests.RequestException:
-                results[mbid] = []
+            similar = self.get_similar_recordings(mbid, count=count_per_mbid)
+            results[mbid] = similar
         return results
 
     # -------------------------------------------------------------------------
@@ -197,27 +234,24 @@ class ListenBrainzClient:
         if not mbids:
             return results
 
-        self._rate_limit()
-
         url = f"{self.config.api_url}/metadata/recording/"
         params = {
             "recording_mbids": ",".join(mbids),
             "inc": "tag",
         }
 
+        response = self._request_with_retry("GET", url, params=params)
+        if response is None:
+            return results
+
+        if response.status_code == 404:
+            return results
+
         try:
-            response = self._session.get(
-                url, params=params, timeout=self.config.request_timeout
-            )
-            self._last_request_time = time.time()
-
-            if response.status_code == 404:
-                return results
-
             response.raise_for_status()
             data = response.json()
-        except requests.exceptions.RequestException:
-            logger.warning("Failed to fetch recording tags from ListenBrainz")
+        except (requests.exceptions.HTTPError, ValueError):
+            logger.warning("Failed to parse recording tags from ListenBrainz")
             return results
 
         # Response format varies — handle both list and dict forms
@@ -280,25 +314,20 @@ class ListenBrainzClient:
         if not mbids:
             return results
 
-        self._rate_limit()
-
         url = f"{self.config.api_url}/popularity/recording"
 
+        response = self._request_with_retry("POST", url, json={"recording_mbids": mbids})
+        if response is None:
+            return results
+
+        if response.status_code == 404:
+            return results
+
         try:
-            response = self._session.post(
-                url,
-                json={"recording_mbids": mbids},
-                timeout=self.config.request_timeout,
-            )
-            self._last_request_time = time.time()
-
-            if response.status_code == 404:
-                return results
-
             response.raise_for_status()
             data = response.json()
-        except requests.exceptions.RequestException:
-            logger.warning("Failed to fetch recording popularity from ListenBrainz")
+        except (requests.exceptions.HTTPError, ValueError):
+            logger.warning("Failed to parse recording popularity from ListenBrainz")
             return results
 
         if isinstance(data, list):

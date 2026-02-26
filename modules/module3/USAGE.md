@@ -465,7 +465,7 @@ else:
 
 ---
 
-## The "Wannabe Problem" — Songs with No Data
+## The "Wannabe Problem" — Songs with No LB Neighbors
 
 Many popular songs (even massive hits) have **zero** ListenBrainz neighbor data because LB is built from a small user base. Spice Girls "Wannabe" is a classic example.
 
@@ -475,7 +475,7 @@ uv run --package module2 python -m module2.lookup --search "Spice Girls Wannabe"
 # → Will find the MBID but likely show 0 LB neighbors
 ```
 
-**What happens at each level:**
+### Current behavior (v1)
 
 | Layer | Without Essentia | With Essentia |
 |-------|-----------------|---------------|
@@ -483,9 +483,123 @@ uv run --package module2 python -m module2.lookup --search "Spice Girls Wannabe"
 | **AB features** | Missing — Module 1 uses 0.5 neutral fallback | Essentia extracts real features (BPM, key, energy, loudness, MFCC) |
 | **As waypoint** | Only if it appears in another track's neighbor list | Same, but with real features instead of fallback |
 
-**Essentia helps when**: a track appears in someone else's LB neighbor list but has no AB data. Essentia fills in the audio features so Module 1 can score transitions properly instead of falling back to 0.5 across 7 dimensions.
+### Planned: Proxy Track Strategy (v2)
 
-**Essentia does NOT help when**: a track has 0 LB neighbors. It still can't be a beam search source/destination because there are no edges in the graph. This is a data coverage problem, not a feature problem.
+When a user picks a song with 0 LB neighbors, the system will:
+
+1. **Keep the user's song** in the playlist (never substitute it)
+2. **Extract features** via Essentia (yt-dlp + MusicExtractor, ~30s first time)
+3. **Find a proxy track** — the sonically closest track that HAS LB neighbors
+4. **Beam search** between proxies (fills in the middle tracks)
+5. **Swap proxies back out** — user's songs stay at position 1 and last
+6. **Re-score edge transitions** using Essentia features
+
+```
+User picks: Wannabe → Bohemian Rhapsody (both 0 LB neighbors)
+
+Final playlist:
+  1. Wannabe              ← user's pick (Essentia features)
+  2. [from beam search]   ← found via proxy's LB neighbors
+  3. [from beam search]
+  4. [from beam search]
+  5. Bohemian Rhapsody     ← user's pick (Essentia features)
+```
+
+### Test the data gap yourself
+
+```bash
+# 1. Search for Wannabe — will show MBID but 0 LB neighbors
+uv run --package module2 python -m module2.lookup --search "Spice Girls Wannabe"
+
+# 2. Compare with a track that HAS data
+uv run --package module2 python -m module2.lookup --check 1eac49da-3399-4d34-bbf3-a98a91e2758b
+
+# 3. Test yt-dlp download speed (no Essentia needed)
+time yt-dlp --extract-audio --audio-format vorbis --audio-quality 5 \
+  --no-playlist --max-downloads 1 \
+  -o "/tmp/test_wannabe.%(ext)s" \
+  "ytsearch1:Spice Girls Wannabe"
+
+# 4. Check file
+ls -lh /tmp/test_wannabe.*
+
+# 5. Clean up
+rm /tmp/test_wannabe.*
+```
+
+```python
+# 6. Test Essentia client audio acquisition (works without Essentia installed)
+uv run --package module3 python3 -c "
+from module3.essentia_client import EssentiaClient, EssentiaConfig
+
+config = EssentiaConfig(
+    audio_cache_dir='/tmp/waveguide_test_audio',
+    cleanup_audio=False,
+)
+client = EssentiaClient(config)
+
+print(f'Essentia available: {client.is_available}')
+
+# Download audio via yt-dlp
+import time
+start = time.time()
+audio = client._acquire_audio(
+    'a8e40e56-d5e7-4d40-a589-5765bbc1e428',
+    title='Wannabe', artist='Spice Girls',
+)
+elapsed = time.time() - start
+
+if audio:
+    print(f'Audio downloaded: {audio}')
+    print(f'File size: {audio.stat().st_size / 1024:.0f} KB')
+    print(f'Time: {elapsed:.1f}s')
+else:
+    print('Failed (check yt-dlp installation)')
+"
+```
+
+```python
+# 7. Full Essentia extraction (requires essentia-tensorflow)
+uv run --package module3 python3 -c "
+from module3.essentia_client import EssentiaClient, EssentiaConfig, ESSENTIA_AVAILABLE
+import time
+
+if not ESSENTIA_AVAILABLE:
+    print('Install: pip install essentia-tensorflow')
+    exit()
+
+config = EssentiaConfig(
+    cache_dir='/tmp/waveguide_test_cache',
+    audio_cache_dir='/tmp/waveguide_test_audio',
+    cleanup_audio=False,
+)
+client = EssentiaClient(config)
+
+start = time.time()
+features = client.fetch_features(
+    'a8e40e56-d5e7-4d40-a589-5765bbc1e428',
+    title='Wannabe', artist='Spice Girls',
+)
+elapsed = time.time() - start
+
+if features:
+    print(f'Wannabe — extracted in {elapsed:.1f}s')
+    print(f'  BPM: {features.bpm:.1f}')
+    print(f'  Key: {features.key} {features.scale}')
+    print(f'  Energy: {features.energy_score:.4f}')
+    print(f'  Loudness: {features.loudness}')
+    print(f'  Stats: {client.cache_stats()}')
+"
+```
+
+### What Essentia gives vs what's missing
+
+| Dimension | From Essentia? | Status |
+|-----------|---------------|--------|
+| Key, Tempo, Energy, Loudness, Timbre | Yes (MusicExtractor) | 5 real dimensions |
+| Mood, Genre | No (needs TF classifiers, not yet wired) | Falls back to 0.5 |
+| Tags, Popularity | No (ListenBrainz API) | Separate source |
+| Artist, Era, MB Genre | No (MusicBrainz API) | Separate source |
 
 ---
 

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import sys
 
 from module1 import MusicKnowledgeBase
@@ -16,6 +17,7 @@ from module2 import SearchSpace
 
 from .essentia_client import EssentiaClient
 from .playlist_assembler import PlaylistAssembler
+from .proxy_pool import ProxyPool
 
 
 def main() -> None:
@@ -30,7 +32,15 @@ def main() -> None:
     parser.add_argument(
         "--no-essentia", action="store_true", help="Disable Essentia fallback"
     )
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable debug logging"
+    )
     args = parser.parse_args()
+
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG, format="%(name)s: %(message)s")
+    else:
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     kb = MusicKnowledgeBase()
     search_space = SearchSpace(kb)
@@ -42,11 +52,15 @@ def main() -> None:
             print("Note: Essentia not installed — audio analysis fallback disabled")
             essentia = None
 
+    proxy_pool = ProxyPool(knowledge_base=kb)
+    print(f"Proxy pool: {proxy_pool.size} tracks with known LB connectivity")
+
     assembler = PlaylistAssembler(
         knowledge_base=kb,
         search_space=search_space,
         essentia_client=essentia,
         beam_width=args.beam_width,
+        proxy_pool=proxy_pool,
     )
 
     print(f"Finding playlist path: {args.source} → {args.dest}")
@@ -58,7 +72,10 @@ def main() -> None:
     )
 
     if playlist is None:
-        print("No path found. The tracks may not have sufficient data coverage.")
+        print("No path found. Possible reasons:")
+        print("  - Both tracks have no LB neighbors and no proxy could be found")
+        print("  - The graph is too sparse to connect these tracks")
+        print("  - API connection issues (try with --verbose for details)")
         sys.exit(1)
 
     if args.json:
@@ -77,7 +94,7 @@ def main() -> None:
         if te.incoming_transition:
             it = te.incoming_transition
             print(f"     ↑ compatibility: {it.overall_score:.0%}")
-            for dim, score, desc in it.top_contributors:
+            for _dim, _score, desc in it.top_contributors:
                 print(f"       • {desc}")
 
     print()
@@ -97,6 +114,9 @@ def main() -> None:
             print(f"  {status} {cr.name} (score: {cr.score:.0%})")
             for v in cr.violations:
                 print(f"    - {v}")
+
+    # Proxy pool stats
+    print(f"\nProxy pool: {proxy_pool.size} tracks (auto-growing)")
 
 
 if __name__ == "__main__":

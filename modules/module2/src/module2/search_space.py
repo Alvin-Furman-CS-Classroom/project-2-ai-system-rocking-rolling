@@ -3,9 +3,15 @@
 Coordinates API calls, caching, and feature access for the beam search algorithm.
 Orchestrates enrichment from all 3 data sources: AcousticBrainz, ListenBrainz,
 and MusicBrainz.
+
+Includes a persistent disk cache for LB neighbor responses so that repeated
+runs for the same MBID don't re-hit the API (the most expensive call: 4
+algorithms × 1 req each at 0.5 s intervals).
 """
 
+import json
 import logging
+from pathlib import Path
 from typing import Protocol, runtime_checkable
 
 from module1 import MusicKnowledgeBase, TrackFeatures, TransitionResult
@@ -15,6 +21,8 @@ from .listenbrainz_client import ListenBrainzClient
 from .musicbrainz_client import MusicBrainzClient
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_CACHE_DIR = Path.home() / ".waveguide" / "neighbor_cache"
 
 
 @runtime_checkable
@@ -46,38 +54,93 @@ class SearchSpace(SearchSpaceProtocol):
         ab_client: AcousticBrainzClient | None = None,
         mb_client: MusicBrainzClient | None = None,
         neighborhood_size: int = 25,
+        cache_dir: Path | None = DEFAULT_CACHE_DIR,
     ):
         self.kb = knowledge_base
         self.lb_client = lb_client or ListenBrainzClient()
         self.ab_client = ab_client or AcousticBrainzClient()
         self.mb_client = mb_client or MusicBrainzClient()
         self.neighborhood_size = neighborhood_size
+        self._cache_dir = cache_dir
+
+        # Create disk cache directory
+        if self._cache_dir is not None:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
 
         # In-memory caches
         self._neighbors_cache: dict[str, list[str]] = {}
         self._features_cache: dict[str, TrackFeatures] = {}
 
     def get_neighbors(self, mbid: str) -> list[str]:
-        """Get MBIDs of similar recordings for a given track."""
+        """Get MBIDs of similar recordings for a given track.
+
+        Checks in order: in-memory cache → disk cache → LB API.
+        Results are written to disk so subsequent runs skip the API.
+        """
         if mbid in self._neighbors_cache:
             return self._neighbors_cache[mbid]
 
+        # Check disk cache
+        disk_result = self._load_neighbors_from_disk(mbid)
+        if disk_result is not None:
+            self._neighbors_cache[mbid] = disk_result
+            self.enrich_tracks(disk_result)
+            return disk_result
+
+        # API call (expensive: 4 algorithms × 0.5 s each)
         similar = self.lb_client.get_similar_recordings_multi(
             mbid, count=self.neighborhood_size
         )
         neighbor_mbids = [s.mbid for s in similar]
         self._neighbors_cache[mbid] = neighbor_mbids
 
+        # Persist to disk for future runs
+        self._save_neighbors_to_disk(mbid, neighbor_mbids)
+
         # Enrich discovered neighbors from all data sources
-        self._enrich_tracks(neighbor_mbids)
+        self.enrich_tracks(neighbor_mbids)
 
         return neighbor_mbids
+
+    # -------------------------------------------------------------------------
+    # Disk cache for neighbor lists
+    # -------------------------------------------------------------------------
+
+    def _neighbor_cache_path(self, mbid: str) -> Path | None:
+        """Get the disk cache file path for an MBID's neighbors."""
+        if self._cache_dir is None:
+            return None
+        return self._cache_dir / f"{mbid}.json"
+
+    def _load_neighbors_from_disk(self, mbid: str) -> list[str] | None:
+        """Load cached neighbor list from disk. Returns None on miss."""
+        path = self._neighbor_cache_path(mbid)
+        if path is None or not path.exists():
+            return None
+        try:
+            data = json.loads(path.read_text())
+            if isinstance(data, list) and all(isinstance(x, str) for x in data):
+                logger.debug("Disk cache hit for neighbors of %s (%d entries)", mbid, len(data))
+                return data
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning("Corrupt neighbor cache for %s, ignoring: %s", mbid, e)
+        return None
+
+    def _save_neighbors_to_disk(self, mbid: str, neighbors: list[str]) -> None:
+        """Persist a neighbor list to disk cache."""
+        path = self._neighbor_cache_path(mbid)
+        if path is None:
+            return
+        try:
+            path.write_text(json.dumps(neighbors))
+        except OSError as e:
+            logger.warning("Failed to write neighbor cache for %s: %s", mbid, e)
 
     # -------------------------------------------------------------------------
     # Three-source enrichment pipeline
     # -------------------------------------------------------------------------
 
-    def _enrich_tracks(self, mbids: list[str]) -> None:
+    def enrich_tracks(self, mbids: list[str]) -> None:
         """Enrich tracks from all 3 data sources in priority order.
 
         1. AcousticBrainz (batch, 7 dims) — required for content-based scoring
@@ -225,12 +288,24 @@ class SearchSpace(SearchSpaceProtocol):
 
     def cache_stats(self) -> dict[str, int]:
         """Get statistics about cache usage."""
+        disk_count = 0
+        if self._cache_dir is not None and self._cache_dir.exists():
+            disk_count = len(list(self._cache_dir.glob("*.json")))
         return {
             "neighbors_cached": len(self._neighbors_cache),
+            "neighbors_on_disk": disk_count,
             "features_cached": len(self._features_cache),
         }
 
-    def clear_cache(self) -> None:
-        """Clear all cached data."""
+    def clear_cache(self, include_disk: bool = False) -> None:
+        """Clear all cached data.
+
+        Args:
+            include_disk: If True, also delete the disk neighbor cache files.
+        """
         self._neighbors_cache.clear()
         self._features_cache.clear()
+        if include_disk and self._cache_dir is not None and self._cache_dir.exists():
+            for f in self._cache_dir.glob("*.json"):
+                f.unlink()
+            logger.info("Cleared disk neighbor cache at %s", self._cache_dir)

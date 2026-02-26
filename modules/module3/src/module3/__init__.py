@@ -39,6 +39,7 @@ from .data_models import (
     UserProfile,
 )
 from .essentia_client import EssentiaClient, EssentiaConfig
+from .proxy_pool import ProxyPool, ProxyResult
 from .explainer import (
     detect_energy_arc,
     detect_genre_journey,
@@ -76,6 +77,9 @@ __all__ = [
     # Essentia
     "EssentiaClient",
     "EssentiaConfig",
+    # Proxy pool
+    "ProxyPool",
+    "ProxyResult",
     # Explainer
     "explain_playlist",
     "explain_transition",
