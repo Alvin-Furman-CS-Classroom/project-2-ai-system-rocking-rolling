@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(VIRTUAL_ENV=\"\" uv run python:*)",
+      "Bash(VIRTUAL_ENV=\"\" uv run python -m pytest:*)",
+      "Bash(unset:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run python -m pytest:*)",
+      "WebFetch(domain:docs.google.com)",
+      "WebFetch(domain:doc-04-34-docstext.googleusercontent.com)",
+      "WebFetch(domain:listenbrainz.readthedocs.io)",
+      "WebFetch(domain:api.listenbrainz.org)",
+      "WebFetch(domain:musicbrainz.org)",
+      "WebFetch(domain:archives.ismir.net)",
+      "Bash(uv run python:*)",
+      "Bash(uv run --package module3 pytest modules/module3/src/module3/tests/test_essentia.py -v)"
+    ]
+  }
+}
