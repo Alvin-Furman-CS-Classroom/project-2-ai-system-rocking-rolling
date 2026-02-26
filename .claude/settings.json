@@ -13,7 +13,9 @@
       "WebFetch(domain:musicbrainz.org)",
       "WebFetch(domain:archives.ismir.net)",
       "Bash(uv run python:*)",
-      "Bash(uv run --package module3 pytest modules/module3/src/module3/tests/test_essentia.py -v)"
+      "Bash(uv run --package module3 pytest modules/module3/src/module3/tests/test_essentia.py -v)",
+      "Bash(grep -h \"def test_\" /mnt/hardisk/project-2-ai-system-rocking-rolling/modules/module3/src/module3/tests/test_*.py)",
+      "Bash(wc -l /mnt/hardisk/project-2-ai-system-rocking-rolling/modules/module3/src/module3/tests/test_*.py)"
     ]
   }
 }
