@@ -4,6 +4,7 @@ import requests
 from flask import Flask, jsonify, request
 from module1 import MusicKnowledgeBase
 from module1.data_loader import load_track_from_data
+from module2 import BeamSearch, SearchSpace
 
 app = Flask(__name__)
 
@@ -91,3 +92,139 @@ def compare():
 @app.get("/api/health")
 def health():
     return jsonify({"status": "ok"})
+
+
+@app.get("/api/playlist")
+def playlist():
+    """Generate a playlist path between two songs using Module 2 beam search.
+
+    Query params:
+        source_mbid: MBID of the source/starting track
+        dest_mbid: MBID of the destination/ending track
+        length: Desired playlist length (default: 7)
+        beam_width: Beam width for search (default: 10)
+
+    Returns:
+        JSON with playlist metadata including track MBIDs, transitions,
+        and compatibility scores.
+    """
+    source_mbid = request.args.get("source_mbid")
+    dest_mbid = request.args.get("dest_mbid")
+    length_str = request.args.get("length", "7")
+    beam_width_str = request.args.get("beam_width", "10")
+    length = int(length_str)
+    beam_width = int(beam_width_str)
+
+    if not source_mbid or not dest_mbid:
+        return jsonify(
+            {"error": "Both source_mbid and dest_mbid are required."}
+        ), 400
+
+    try:
+        # Fetch features for source and destination
+        source_low, source_high = fetch_acousticbrainz(source_mbid)
+        source_track = load_track_from_data(source_low, source_high)
+        source_track.mbid = source_mbid
+    except requests.HTTPError as e:
+        return jsonify(
+            {"error": f"Failed to fetch AcousticBrainz data for source_mbid: {e}"}
+        ), 502
+    except requests.ConnectionError:
+        return jsonify({"error": "Could not connect to AcousticBrainz API."}), 502
+
+    try:
+        dest_low, dest_high = fetch_acousticbrainz(dest_mbid)
+        dest_track = load_track_from_data(dest_low, dest_high)
+        dest_track.mbid = dest_mbid
+    except requests.HTTPError as e:
+        return jsonify(
+            {"error": f"Failed to fetch AcousticBrainz data for dest_mbid: {e}"}
+        ), 502
+    except requests.ConnectionError:
+        return jsonify({"error": "Could not connect to AcousticBrainz API."}), 502
+
+    try:
+        # Initialize search components
+        search_space = SearchSpace(knowledge_base=kb)
+        search_space.add_features(source_mbid, source_track)
+        search_space.add_features(dest_mbid, dest_track)
+
+        search = BeamSearch(
+            knowledge_base=kb,
+            search_space=search_space,
+            beam_width=beam_width,
+        )
+
+        # Find path
+        path = search.find_path(
+            source_mbid=source_mbid,
+            dest_mbid=dest_mbid,
+            target_length=length,
+        )
+
+        if path is None:
+            return jsonify(
+                {
+                    "error": "No path found between the specified tracks.",
+                    "details": (
+                        "Possible reasons: source/destination not in AcousticBrainz, "
+                        "no similar recordings available, or search space too sparse."
+                    ),
+                }
+            ), 404
+
+        # Build response with playlist metadata
+        tracks = []
+        transitions_data = []
+
+        for i, mbid in enumerate(path.mbids):
+            features = search_space.get_features(mbid)
+            track_info = {
+                "position": i + 1,
+                "mbid": mbid,
+                "title": features.title if features else None,
+                "artist": features.artist if features else None,
+                "album": features.album if features else None,
+                "bpm": features.bpm if features else None,
+                "key": features.key if features else None,
+                "scale": features.scale if features else None,
+            }
+            tracks.append(track_info)
+
+            if i < len(path.transitions):
+                t = path.transitions[i]
+                transitions_data.append(
+                    {
+                        "from_mbid": path.mbids[i],
+                        "to_mbid": path.mbids[i + 1],
+                        "probability": round(t.probability, 4),
+                        "penalty": round(t.penalty, 4),
+                        "is_compatible": t.is_compatible,
+                        "components": {
+                            "key": round(t.key_compatibility, 4),
+                            "tempo": round(t.tempo_compatibility, 4),
+                            "energy": round(t.energy_compatibility, 4),
+                            "loudness": round(t.loudness_compatibility, 4),
+                            "mood": round(t.mood_compatibility, 4),
+                            "timbre": round(t.timbre_compatibility, 4),
+                            "genre": round(t.genre_compatibility, 4),
+                        },
+                        "violations": t.violations,
+                    }
+                )
+
+        return jsonify(
+            {
+                "source_mbid": source_mbid,
+                "dest_mbid": dest_mbid,
+                "requested_length": length,
+                "actual_length": path.length,
+                "total_cost": round(path.total_cost, 4),
+                "average_compatibility": round(path.average_compatibility, 4),
+                "tracks": tracks,
+                "transitions": transitions_data,
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"error": f"Internal error during playlist generation: {e}"}), 500
