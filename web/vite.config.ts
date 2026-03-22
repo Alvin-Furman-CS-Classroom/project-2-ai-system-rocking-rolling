@@ -7,7 +7,12 @@ export default defineConfig({
 	plugins: [react(), tailwindcss()],
 	server: {
 		proxy: {
-			"/api": "http://localhost:5000",
+			"/api": "http://127.0.0.1:5000",
+			"/song-api": {
+				target: "https://metabrainz.thomasfmly.org",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/song-api/, ""),
+			},
 		},
 	},
 });
