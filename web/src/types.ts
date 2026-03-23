@@ -66,6 +66,9 @@ export interface PlaylistResponse {
   average_compatibility: number;
   tracks: TrackInfo[];
   transitions: TransitionInfo[];
+  summary?: string;
+  constraints?: Array<{ name: string; satisfied: boolean; score: number }>;
+  quality?: Record<string, number>;
   error?: string;
   details?: string;
 }

@@ -4,7 +4,8 @@ import requests
 from flask import Flask, jsonify, request
 from module1 import MusicKnowledgeBase
 from module1.data_loader import load_track_from_data
-from module2 import BeamSearch, SearchSpace
+from module2 import SearchSpace
+from module3 import PlaylistAssembler
 
 app = Flask(__name__)
 
@@ -144,25 +145,25 @@ def playlist():
         return jsonify({"error": "Could not connect to AcousticBrainz API."}), 502
 
     try:
-        # Initialize search components
+        # Initialize search space with source/dest features
         search_space = SearchSpace(knowledge_base=kb)
         search_space.add_features(source_mbid, source_track)
         search_space.add_features(dest_mbid, dest_track)
 
-        search = BeamSearch(
+        # Run full Module 3 pipeline (beam search + constraints + explanations)
+        assembler = PlaylistAssembler(
             knowledge_base=kb,
             search_space=search_space,
             beam_width=beam_width,
         )
 
-        # Find path
-        path = search.find_path(
+        playlist = assembler.generate_playlist(
             source_mbid=source_mbid,
             dest_mbid=dest_mbid,
             target_length=length,
         )
 
-        if path is None:
+        if playlist is None:
             return jsonify(
                 {
                     "error": "No path found between the specified tracks.",
@@ -177,41 +178,40 @@ def playlist():
         tracks = []
         transitions_data = []
 
-        for i, mbid in enumerate(path.mbids):
-            features = search_space.get_features(mbid)
+        for i, track in enumerate(playlist.tracks):
             track_info = {
                 "position": i + 1,
-                "mbid": mbid,
-                "title": features.title if features else None,
-                "artist": features.artist if features else None,
-                "album": features.album if features else None,
-                "bpm": features.bpm if features else None,
-                "key": features.key if features else None,
-                "scale": features.scale if features else None,
+                "mbid": track.mbid,
+                "title": track.title,
+                "artist": track.artist,
+                "album": None,
+                "bpm": track.bpm,
+                "key": track.key,
+                "scale": track.scale,
             }
             tracks.append(track_info)
 
-            if i < len(path.transitions):
-                t = path.transitions[i]
-                transitions_data.append(
-                    {
-                        "from_mbid": path.mbids[i],
-                        "to_mbid": path.mbids[i + 1],
-                        "probability": round(t.probability, 4),
-                        "penalty": round(t.penalty, 4),
-                        "is_compatible": t.is_compatible,
-                        "components": {
-                            "key": round(t.key_compatibility, 4),
-                            "tempo": round(t.tempo_compatibility, 4),
-                            "energy": round(t.energy_compatibility, 4),
-                            "loudness": round(t.loudness_compatibility, 4),
-                            "mood": round(t.mood_compatibility, 4),
-                            "timbre": round(t.timbre_compatibility, 4),
-                            "genre": round(t.genre_compatibility, 4),
-                        },
-                        "violations": t.violations,
-                    }
-                )
+        path = playlist.path
+        for i, t in enumerate(path.transitions):
+            transitions_data.append(
+                {
+                    "from_mbid": path.mbids[i],
+                    "to_mbid": path.mbids[i + 1],
+                    "probability": round(t.probability, 4),
+                    "penalty": round(t.penalty, 4),
+                    "is_compatible": t.is_compatible,
+                    "components": {
+                        "key": round(t.key_compatibility, 4),
+                        "tempo": round(t.tempo_compatibility, 4),
+                        "energy": round(t.energy_compatibility, 4),
+                        "loudness": round(t.loudness_compatibility, 4),
+                        "mood": round(t.mood_compatibility, 4),
+                        "timbre": round(t.timbre_compatibility, 4),
+                        "genre": round(t.genre_compatibility, 4),
+                    },
+                    "violations": t.violations,
+                }
+            )
 
         return jsonify(
             {
@@ -223,6 +223,12 @@ def playlist():
                 "average_compatibility": round(path.average_compatibility, 4),
                 "tracks": tracks,
                 "transitions": transitions_data,
+                "summary": playlist.explanation.summary,
+                "constraints": [
+                    {"name": c.name, "satisfied": c.satisfied, "score": round(c.score, 3)}
+                    for c in playlist.constraints_applied
+                ],
+                "quality": playlist.explanation.quality_metrics,
             }
         )
 

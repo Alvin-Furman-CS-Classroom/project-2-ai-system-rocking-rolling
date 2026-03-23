@@ -19,6 +19,7 @@ dependencies = [
     { name = "flask" },
     { name = "module1" },
     { name = "module2" },
+    { name = "module3" },
     { name = "requests" },
 ]
 
@@ -27,6 +28,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.0.0" },
     { name = "module1", editable = "modules/module1" },
     { name = "module2", editable = "modules/module2" },
+    { name = "module3", editable = "modules/module3" },
     { name = "requests", specifier = ">=2.32.0" },
 ]
 
@@ -273,7 +275,7 @@ requires-dist = [
 [[package]]
 name = "module3"
 version = "0.1.0"
-source = { virtual = "modules/module3" }
+source = { editable = "modules/module3" }
 dependencies = [
     { name = "module1" },
     { name = "module2" },
