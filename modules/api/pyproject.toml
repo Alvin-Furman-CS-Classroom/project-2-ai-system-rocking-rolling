@@ -8,8 +8,10 @@ dependencies = [
     "requests>=2.32.0",
     "module1",
     "module2",
+    "module3",
 ]
 
 [tool.uv.sources]
 module1 = { workspace = true }
 module2 = { workspace = true }
+module3 = { workspace = true }

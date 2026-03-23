@@ -55,12 +55,47 @@ export function PlaylistResults({ result }: PlaylistResultsProps) {
         ))}
       </div>
 
-      <div className="space-y-3">
+      {result.summary && (
+        <div className="mb-8 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
+          <h3 className="text-sm font-medium text-gray-300 mb-2">Summary</h3>
+          <p className="text-sm text-gray-400">{result.summary}</p>
+        </div>
+      )}
+
+      <div className="space-y-3 mb-8">
         <h3 className="text-sm font-medium text-gray-300">Transitions</h3>
         {result.transitions.map((transition, i) => (
           <TransitionBar key={i} transition={transition} index={i} />
         ))}
       </div>
+
+      {result.constraints && result.constraints.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-gray-300">Constraints</h3>
+          {result.constraints.map((c) => (
+            <div
+              key={c.name}
+              className="flex items-center justify-between rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-2"
+            >
+              <span className="text-sm text-gray-300">{c.name}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-500 tabular-nums">
+                  {Math.round(c.score * 100)}%
+                </span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                    c.satisfied
+                      ? "bg-green-900/50 text-green-400"
+                      : "bg-red-900/50 text-red-400"
+                  }`}
+                >
+                  {c.satisfied ? "Pass" : "Fail"}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
