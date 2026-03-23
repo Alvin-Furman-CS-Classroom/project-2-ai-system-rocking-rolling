@@ -3,10 +3,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from module1 import MusicKnowledgeBase, TrackFeatures, TransitionResult, UserPreferences
+from module1 import MusicKnowledgeBase, TrackFeatures, TransitionResult
 from module2 import PlaylistPath
 
-from module3.constraints import NoRepeatArtists, NoRepeatedTracks
 from module3.data_models import AssembledPlaylist, PlaylistFeedback, UserProfile
 from module3.playlist_assembler import PlaylistAssembler
 

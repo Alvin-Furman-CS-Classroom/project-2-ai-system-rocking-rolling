@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from uuid import uuid4
 
-from module1 import TrackFeatures, TransitionResult, UserPreferences
+from module1 import TrackFeatures, UserPreferences
 from module2 import PlaylistPath
 
 

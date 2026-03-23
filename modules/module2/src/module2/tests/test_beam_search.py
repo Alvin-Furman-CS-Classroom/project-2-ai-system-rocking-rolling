@@ -285,8 +285,6 @@ class TestBidirectionalBeamSearch(unittest.TestCase):
             ("B", "D"): 0.3,
             ("C", "A"): 0.3,
             ("D", "A"): 0.5,
-            ("B", "A"): 0.1,
-            ("C", "A"): 0.3,
         }
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(
@@ -408,8 +406,6 @@ class TestBidirectionalBeamSearch(unittest.TestCase):
             ("B", "D"): 0.1,
             ("C", "D"): 0.2,
             ("A", "D"): 0.5,
-            ("B", "D"): 0.3,
-            ("C", "D"): 0.3,
             ("D", "A"): 0.5,
             ("B", "A"): 0.3,
             ("C", "A"): 0.3,

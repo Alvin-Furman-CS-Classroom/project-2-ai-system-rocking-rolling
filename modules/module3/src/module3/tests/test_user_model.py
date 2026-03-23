@@ -1,6 +1,5 @@
 """Tests for Module 3 user modeling."""
 
-import json
 import tempfile
 import unittest
 from pathlib import Path

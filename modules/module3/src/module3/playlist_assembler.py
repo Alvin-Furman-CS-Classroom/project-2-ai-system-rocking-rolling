@@ -15,13 +15,12 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
-from module1 import MusicKnowledgeBase, TransitionResult, UserPreferences
+from module1 import MusicKnowledgeBase, TrackFeatures, TransitionResult, UserPreferences
 from module2 import BeamSearch, PlaylistPath, SearchSpace
 
 from .constraints import (
     DEFAULT_CONSTRAINTS,
     PlaylistConstraint,
-    evaluate_all,
     resolve_constraints,
 )
 from .data_models import (
@@ -31,7 +30,7 @@ from .data_models import (
 )
 from .essentia_client import EssentiaClient
 from .explainer import explain_playlist
-from .user_model import load_profile, save_profile, update_from_feedback
+from .user_model import save_profile, update_from_feedback
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +113,6 @@ class PlaylistAssembler:
                 features = self.essentia_client.fetch_features(mbid)
             if features is None:
                 # Create a minimal TrackFeatures so we don't break the pipeline
-                from module1 import TrackFeatures
-
                 features = TrackFeatures(mbid=mbid)
             tracks.append(features)
 
