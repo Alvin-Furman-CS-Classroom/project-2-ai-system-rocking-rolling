@@ -59,17 +59,27 @@ def _probe_backend(name: str) -> bool:
 
     kb = MusicKnowledgeBase()
     t1 = TrackFeatures(
-        mbid="probe_a", key="C", scale="major", bpm=120.0,
-        energy_low=0.3, energy_high=0.7,
-        mood_happy=("happy", 0.7), mood_sad=("sad", 0.3),
+        mbid="probe_a",
+        key="C",
+        scale="major",
+        bpm=120.0,
+        energy_low=0.3,
+        energy_high=0.7,
+        mood_happy=("happy", 0.7),
+        mood_sad=("sad", 0.3),
         genre_rosamerica=("rock", 0.8),
         genre_rosamerica_all={"rock": 0.8, "pop": 0.2},
         mfcc=[0.0] * 13,
     )
     t2 = TrackFeatures(
-        mbid="probe_b", key="G", scale="major", bpm=125.0,
-        energy_low=0.25, energy_high=0.65,
-        mood_happy=("happy", 0.6), mood_sad=("sad", 0.4),
+        mbid="probe_b",
+        key="G",
+        scale="major",
+        bpm=125.0,
+        energy_low=0.25,
+        energy_high=0.65,
+        mood_happy=("happy", 0.6),
+        mood_sad=("sad", 0.4),
         genre_rosamerica=("rock", 0.6),
         genre_rosamerica_all={"rock": 0.6, "jazz": 0.4},
         mfcc=[0.0] * 13,
@@ -103,6 +113,7 @@ def _detect_problog_backend() -> str:
         "Inference will be slower."
     )
     return "kbest"
+
 
 class MusicKnowledgeBase:
     """

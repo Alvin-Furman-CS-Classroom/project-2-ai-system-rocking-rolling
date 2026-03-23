@@ -22,8 +22,18 @@ from .data_models import PlaylistFeedback, UserProfile
 logger = logging.getLogger(__name__)
 
 DIMENSION_NAMES = [
-    "key", "tempo", "energy", "loudness", "mood", "timbre",
-    "genre", "tag", "popularity", "artist", "era", "mb_genre",
+    "key",
+    "tempo",
+    "energy",
+    "loudness",
+    "mood",
+    "timbre",
+    "genre",
+    "tag",
+    "popularity",
+    "artist",
+    "era",
+    "mb_genre",
 ]
 
 DEFAULT_PROFILE_PATH = Path("~/.waveguide/user_profile.json").expanduser()
@@ -40,7 +50,9 @@ def load_profile(path: Path | None = None) -> UserProfile:
             data = json.load(f)
 
         return UserProfile(
-            dimension_weights=data.get("dimension_weights", UserProfile().dimension_weights),
+            dimension_weights=data.get(
+                "dimension_weights", UserProfile().dimension_weights
+            ),
             preferred_genres=data.get("preferred_genres", {}),
             preferred_energy_arc=data.get("preferred_energy_arc", "flat"),
             feedback_history=[

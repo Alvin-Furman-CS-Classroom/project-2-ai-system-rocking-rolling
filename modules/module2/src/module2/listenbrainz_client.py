@@ -15,10 +15,8 @@ logger = logging.getLogger(__name__)
 # producing partially overlapping neighbor sets.
 # Source: https://github.com/metabrainz/listenbrainz-server (Spark jobs)
 SIMILARITY_ALGORITHMS = [
-    "session_based_days_9000_session_300"
-    "_contribution_5_threshold_15_limit_50_skip_30",
-    "session_based_days_7500_session_300"
-    "_contribution_5_threshold_15_limit_50_skip_30",
+    "session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30",
+    "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30",
     "session_based_days_7500_session_300"
     "_contribution_5_threshold_15_limit_50_skip_30"
     "_top_n_listeners_1000",
@@ -143,11 +141,12 @@ class ListenBrainzClient:
         seen: dict[str, SimilarRecording] = {}
 
         for algo in algos:
-            results = self.get_similar_recordings(
-                mbid, count=100, algorithm=algo
-            )
+            results = self.get_similar_recordings(mbid, count=100, algorithm=algo)
             for rec in results:
-                if rec.mbid not in seen or rec.similarity_score > seen[rec.mbid].similarity_score:
+                if (
+                    rec.mbid not in seen
+                    or rec.similarity_score > seen[rec.mbid].similarity_score
+                ):
                     rec.algorithm = algo
                     seen[rec.mbid] = rec
 
@@ -159,7 +158,9 @@ class ListenBrainzClient:
 
         logger.info(
             "Multi-algorithm: %d unique neighbors for %s from %d algorithms",
-            len(merged), mbid, len(algos),
+            len(merged),
+            mbid,
+            len(algos),
         )
         return merged[:count]
 

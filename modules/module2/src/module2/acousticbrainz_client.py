@@ -85,7 +85,9 @@ class AcousticBrainzClient:
                 batch_results = self._bulk_request(batch, "low-level")
                 all_results.update(batch_results)
             except requests.exceptions.RequestException:
-                logger.warning("AcousticBrainz low-level batch failed for %d MBIDs", len(batch))
+                logger.warning(
+                    "AcousticBrainz low-level batch failed for %d MBIDs", len(batch)
+                )
         return all_results
 
     def fetch_highlevel_batch(self, mbids: list[str]) -> dict[str, dict]:
@@ -97,7 +99,9 @@ class AcousticBrainzClient:
                 batch_results = self._bulk_request(batch, "high-level")
                 all_results.update(batch_results)
             except requests.exceptions.RequestException:
-                logger.warning("AcousticBrainz high-level batch failed for %d MBIDs", len(batch))
+                logger.warning(
+                    "AcousticBrainz high-level batch failed for %d MBIDs", len(batch)
+                )
         return all_results
 
     def fetch_features_batch(self, mbids: list[str]) -> dict[str, TrackFeatures]:

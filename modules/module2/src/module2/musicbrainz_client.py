@@ -45,10 +45,12 @@ class MusicBrainzClient:
         self.config = config or MusicBrainzConfig()
         self._last_request_time: float = 0.0
         self._session = requests.Session()
-        self._session.headers.update({
-            "Accept": "application/json",
-            "User-Agent": self.config.user_agent,
-        })
+        self._session.headers.update(
+            {
+                "Accept": "application/json",
+                "User-Agent": self.config.user_agent,
+            }
+        )
 
         # Caches
         self._artist_rels_cache: dict[str, set[str]] = {}

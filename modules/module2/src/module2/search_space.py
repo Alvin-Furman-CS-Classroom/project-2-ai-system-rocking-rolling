@@ -103,9 +103,7 @@ class SearchSpace(SearchSpaceProtocol):
             features = self.ab_client.fetch_features_batch(mbids)
             self._features_cache.update(features)
         except Exception:
-            logger.warning(
-                "AcousticBrainz enrichment failed for %d MBIDs", len(mbids)
-            )
+            logger.warning("AcousticBrainz enrichment failed for %d MBIDs", len(mbids))
 
     def _enrich_with_listenbrainz(self, mbids: list[str]) -> None:
         """Enrich cached TrackFeatures with ListenBrainz tags and popularity."""

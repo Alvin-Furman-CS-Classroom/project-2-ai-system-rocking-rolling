@@ -16,8 +16,18 @@ from .data_models import (
 )
 
 DIMENSION_NAMES = [
-    "key", "tempo", "energy", "loudness", "mood", "timbre",
-    "genre", "tag", "popularity", "artist", "era", "mb_genre",
+    "key",
+    "tempo",
+    "energy",
+    "loudness",
+    "mood",
+    "timbre",
+    "genre",
+    "tag",
+    "popularity",
+    "artist",
+    "era",
+    "mb_genre",
 ]
 
 DIMENSION_LABELS = {
@@ -167,7 +177,9 @@ def explain_transition(
         to_title=track2.title or track2.mbid,
         overall_score=transition.probability,
         top_contributors=get_top_contributors(transition, prefs, 3, track1, track2),
-        bottom_contributors=get_bottom_contributors(transition, prefs, 2, track1, track2),
+        bottom_contributors=get_bottom_contributors(
+            transition, prefs, 2, track1, track2
+        ),
         raw_explanation=transition.explanation,
     )
 
@@ -192,11 +204,19 @@ def detect_energy_arc(tracks: list[TrackFeatures]) -> str:
     mid_e = energies[len(energies) // 2]
 
     # Check for valley (starts high, dips, comes back)
-    if start_e > mid_e and end_e > mid_e and abs(start_e - end_e) < max(start_e, end_e) * 0.3:
+    if (
+        start_e > mid_e
+        and end_e > mid_e
+        and abs(start_e - end_e) < max(start_e, end_e) * 0.3
+    ):
         return "valley"
 
     # Check for hill (starts low, peaks, comes back)
-    if mid_e > start_e and mid_e > end_e and abs(start_e - end_e) < max(start_e, end_e) * 0.3:
+    if (
+        mid_e > start_e
+        and mid_e > end_e
+        and abs(start_e - end_e) < max(start_e, end_e) * 0.3
+    ):
         return "hill"
 
     # Rising or falling
@@ -258,7 +278,11 @@ def generate_quality_metrics(
 ) -> dict[str, float]:
     """Compute quality metrics for a playlist."""
     if not transitions:
-        return {"avg_compatibility": 0.0, "weakest_transition": 0.0, "strongest_transition": 0.0}
+        return {
+            "avg_compatibility": 0.0,
+            "weakest_transition": 0.0,
+            "strongest_transition": 0.0,
+        }
 
     probs = [t.probability for t in transitions]
     return {
@@ -295,19 +319,19 @@ def explain_playlist(
             )
 
         if i < len(transitions):
-            outgoing = explain_transition(
-                transitions[i], prefs, track, tracks[i + 1]
-            )
+            outgoing = explain_transition(transitions[i], prefs, track, tracks[i + 1])
 
-        track_explanations.append(TrackExplanation(
-            position=i,
-            mbid=track.mbid,
-            title=track.title,
-            artist=track.artist,
-            role=role,
-            incoming_transition=incoming,
-            outgoing_transition=outgoing,
-        ))
+        track_explanations.append(
+            TrackExplanation(
+                position=i,
+                mbid=track.mbid,
+                title=track.title,
+                artist=track.artist,
+                role=role,
+                incoming_transition=incoming,
+                outgoing_transition=outgoing,
+            )
+        )
 
     constraint_notes = []
     if constraint_results:

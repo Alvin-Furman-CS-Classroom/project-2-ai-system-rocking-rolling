@@ -115,6 +115,7 @@ class PlaylistAssembler:
             if features is None:
                 # Create a minimal TrackFeatures so we don't break the pipeline
                 from module1 import TrackFeatures
+
                 features = TrackFeatures(mbid=mbid)
             tracks.append(features)
 
@@ -162,7 +163,8 @@ class PlaylistAssembler:
             save_profile(self.user_profile, self._profile_path)
 
     def _rescore_transitions(
-        self, tracks: list["TrackFeatures"],
+        self,
+        tracks: list["TrackFeatures"],
     ) -> list[TransitionResult]:
         """Re-score all transitions after constraint resolution."""
         transitions = []

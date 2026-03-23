@@ -225,9 +225,7 @@ class BeamSearch:
                 expansions += 1
 
             # Check for meeting after forward expansion
-            path = self._check_meeting(
-                fwd_reached, bwd_reached, target_length
-            )
+            path = self._check_meeting(fwd_reached, bwd_reached, target_length)
             if path is not None:
                 return path
 
@@ -239,9 +237,7 @@ class BeamSearch:
                 expansions += 1
 
             # Check for meeting after backward expansion
-            path = self._check_meeting(
-                fwd_reached, bwd_reached, target_length
-            )
+            path = self._check_meeting(fwd_reached, bwd_reached, target_length)
             if path is not None:
                 return path
 
@@ -264,9 +260,7 @@ class BeamSearch:
             if state.length >= max_path_length:
                 continue
 
-            neighbors = self.search_space.get_scoreable_neighbors(
-                state.current_mbid
-            )
+            neighbors = self.search_space.get_scoreable_neighbors(state.current_mbid)
 
             for neighbor_mbid in neighbors:
                 if neighbor_mbid in state.path:
@@ -340,9 +334,7 @@ class BeamSearch:
         """Re-compute total cost for a path in forward direction."""
         total_cost = 0.0
         for i in range(len(mbids) - 1):
-            cost = self.search_space.get_transition_cost(
-                mbids[i], mbids[i + 1]
-            )
+            cost = self.search_space.get_transition_cost(mbids[i], mbids[i + 1])
             if cost is None:
                 return None
             total_cost += cost

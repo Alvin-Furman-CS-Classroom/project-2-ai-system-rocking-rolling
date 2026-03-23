@@ -86,7 +86,9 @@ class EssentiaClient:
             return cached
 
         if not ESSENTIA_AVAILABLE:
-            logger.warning("Essentia not installed — cannot extract features for %s", mbid)
+            logger.warning(
+                "Essentia not installed — cannot extract features for %s", mbid
+            )
             self._stats["failures"] += 1
             return None
 
@@ -145,9 +147,7 @@ class EssentiaClient:
             cache_file.unlink(missing_ok=True)
             return None
 
-    def _save_cached_features(
-        self, mbid: str, lowlevel: dict, highlevel: dict
-    ) -> None:
+    def _save_cached_features(self, mbid: str, lowlevel: dict, highlevel: dict) -> None:
         """Save extracted features to cache."""
         cache_file = self._cache_dir / f"{mbid}.json"
         try:
@@ -182,11 +182,15 @@ class EssentiaClient:
                 [
                     self.config.yt_dlp_path,
                     "--extract-audio",
-                    "--audio-format", "vorbis",
-                    "--audio-quality", "5",
+                    "--audio-format",
+                    "vorbis",
+                    "--audio-quality",
+                    "5",
                     "--no-playlist",
-                    "--max-downloads", "1",
-                    "-o", output_template,
+                    "--max-downloads",
+                    "1",
+                    "-o",
+                    output_template,
                     f"ytsearch1:{search_query}",
                 ],
                 capture_output=True,
@@ -249,6 +253,7 @@ class EssentiaClient:
           lowlevel.spectral_centroid.mean
           lowlevel.dissonance.mean
         """
+
         def _safe_get(key, default=None):
             try:
                 val = features[key]
@@ -267,24 +272,46 @@ class EssentiaClient:
                 "danceability": _safe_get("rhythm.danceability", None),
             },
             "tonal": {
-                "key_key": _safe_get("tonal.key_edma.key", _safe_get("tonal.key_key", "C")),
-                "key_scale": _safe_get("tonal.key_edma.scale", _safe_get("tonal.key_scale", "major")),
-                "key_strength": _safe_get("tonal.key_edma.strength", _safe_get("tonal.key_strength", 0.0)),
+                "key_key": _safe_get(
+                    "tonal.key_edma.key", _safe_get("tonal.key_key", "C")
+                ),
+                "key_scale": _safe_get(
+                    "tonal.key_edma.scale", _safe_get("tonal.key_scale", "major")
+                ),
+                "key_strength": _safe_get(
+                    "tonal.key_edma.strength", _safe_get("tonal.key_strength", 0.0)
+                ),
                 "tuning_frequency": _safe_get("tonal.tuning_frequency", 440.0),
-                "chords_strength": {"mean": _safe_get("tonal.chords_strength.mean", 0.0)},
+                "chords_strength": {
+                    "mean": _safe_get("tonal.chords_strength.mean", 0.0)
+                },
             },
             "lowlevel": {
-                "spectral_energyband_low": {"mean": _safe_get("lowlevel.spectral_energyband_low.mean", 0.0)},
-                "spectral_energyband_middle_low": {"mean": _safe_get("lowlevel.spectral_energyband_middle_low.mean", 0.0)},
-                "spectral_energyband_middle_high": {"mean": _safe_get("lowlevel.spectral_energyband_middle_high.mean", 0.0)},
-                "spectral_energyband_high": {"mean": _safe_get("lowlevel.spectral_energyband_high.mean", 0.0)},
+                "spectral_energyband_low": {
+                    "mean": _safe_get("lowlevel.spectral_energyband_low.mean", 0.0)
+                },
+                "spectral_energyband_middle_low": {
+                    "mean": _safe_get(
+                        "lowlevel.spectral_energyband_middle_low.mean", 0.0
+                    )
+                },
+                "spectral_energyband_middle_high": {
+                    "mean": _safe_get(
+                        "lowlevel.spectral_energyband_middle_high.mean", 0.0
+                    )
+                },
+                "spectral_energyband_high": {
+                    "mean": _safe_get("lowlevel.spectral_energyband_high.mean", 0.0)
+                },
                 "average_loudness": _safe_get("lowlevel.average_loudness", None),
                 "dynamic_complexity": _safe_get("lowlevel.dynamic_complexity", None),
                 "mfcc": {
                     "mean": _safe_get("lowlevel.mfcc.mean", None),
                     "cov": _safe_get("lowlevel.mfcc.cov", None),
                 },
-                "spectral_centroid": {"mean": _safe_get("lowlevel.spectral_centroid.mean", 0.0)},
+                "spectral_centroid": {
+                    "mean": _safe_get("lowlevel.spectral_centroid.mean", 0.0)
+                },
                 "dissonance": {"mean": _safe_get("lowlevel.dissonance.mean", 0.0)},
             },
         }

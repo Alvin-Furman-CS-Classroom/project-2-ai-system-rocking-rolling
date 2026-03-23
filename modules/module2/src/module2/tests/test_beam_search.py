@@ -91,8 +91,11 @@ class TestBeamSearch(unittest.TestCase):
         """A -> B -> C -> D linear path."""
         graph = {"A": ["B"], "B": ["C"], "C": ["D"]}
         costs = {
-            ("A", "B"): 0.1, ("B", "C"): 0.1, ("C", "D"): 0.1,
-            ("A", "D"): 0.9, ("B", "D"): 0.6,
+            ("A", "B"): 0.1,
+            ("B", "C"): 0.1,
+            ("C", "D"): 0.1,
+            ("A", "D"): 0.9,
+            ("B", "D"): 0.6,
         }
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(
@@ -109,8 +112,10 @@ class TestBeamSearch(unittest.TestCase):
         """Two paths: A->B->D (cost 0.8) and A->C->D (cost 0.4)."""
         graph = {"A": ["B", "C"], "B": ["D"], "C": ["D"]}
         costs = {
-            ("A", "B"): 0.4, ("A", "C"): 0.2,
-            ("B", "D"): 0.4, ("C", "D"): 0.2,
+            ("A", "B"): 0.4,
+            ("A", "C"): 0.2,
+            ("B", "D"): 0.4,
+            ("C", "D"): 0.2,
             ("A", "D"): 0.5,
         }
         mock_space = MockSearchSpace(graph, costs)
@@ -127,12 +132,19 @@ class TestBeamSearch(unittest.TestCase):
     def test_find_path_no_cycles(self):
         """Paths don't revisit nodes."""
         graph = {
-            "A": ["B", "C"], "B": ["A", "C", "D"], "C": ["A", "B", "D"],
+            "A": ["B", "C"],
+            "B": ["A", "C", "D"],
+            "C": ["A", "B", "D"],
         }
         costs = {
-            ("A", "B"): 0.1, ("A", "C"): 0.1,
-            ("B", "A"): 0.1, ("B", "C"): 0.1, ("B", "D"): 0.1,
-            ("C", "A"): 0.1, ("C", "B"): 0.1, ("C", "D"): 0.1,
+            ("A", "B"): 0.1,
+            ("A", "C"): 0.1,
+            ("B", "A"): 0.1,
+            ("B", "C"): 0.1,
+            ("B", "D"): 0.1,
+            ("C", "A"): 0.1,
+            ("C", "B"): 0.1,
+            ("C", "D"): 0.1,
             ("A", "D"): 0.3,
         }
         mock_space = MockSearchSpace(graph, costs)
@@ -147,8 +159,10 @@ class TestBeamSearch(unittest.TestCase):
 
     def test_find_path_respects_target_length(self):
         graph = {
-            "A": ["B", "E"], "B": ["C", "E"],
-            "C": ["D", "E"], "D": ["E"],
+            "A": ["B", "E"],
+            "B": ["C", "E"],
+            "C": ["D", "E"],
+            "D": ["E"],
         }
         costs = {(f, t): 0.1 for f in graph for t in graph.get(f, [])}
         for node in ["A", "B", "C", "D"]:
@@ -167,13 +181,17 @@ class TestBeamSearch(unittest.TestCase):
     def test_find_path_returns_none_for_impossible(self):
         graph = {"A": ["B"], "B": [], "C": ["D"]}
         costs = {
-            ("A", "B"): 0.1, ("C", "D"): 0.1,
-            ("A", "D"): 0.9, ("B", "D"): 0.9,
+            ("A", "B"): 0.1,
+            ("C", "D"): 0.1,
+            ("A", "D"): 0.9,
+            ("B", "D"): 0.9,
         }
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(
-            knowledge_base=self.kb, search_space=mock_space,
-            beam_width=5, max_expansions=50,
+            knowledge_base=self.kb,
+            search_space=mock_space,
+            beam_width=5,
+            max_expansions=50,
         )
 
         path = search.find_path("A", "D", target_length=5)
@@ -206,7 +224,9 @@ class TestBeamSearch(unittest.TestCase):
 
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(
-            knowledge_base=self.kb, search_space=mock_space, beam_width=3,
+            knowledge_base=self.kb,
+            search_space=mock_space,
+            beam_width=3,
         )
 
         path = search.find_path("A", "D", target_length=3)
@@ -230,7 +250,9 @@ class TestPlaylistPath(unittest.TestCase):
             TransitionResult(probability=0.6, penalty=0.4, is_compatible=True),
         ]
         path = PlaylistPath(
-            mbids=["a", "b", "c"], total_cost=0.6, transitions=transitions,
+            mbids=["a", "b", "c"],
+            total_cost=0.6,
+            transitions=transitions,
         )
         self.assertAlmostEqual(path.average_compatibility, 0.7)
 
@@ -247,14 +269,24 @@ class TestBidirectionalBeamSearch(unittest.TestCase):
     def test_bidirectional_simple(self):
         """A -> B -> C -> D with edges in both directions."""
         graph = {
-            "A": ["B"], "B": ["A", "C"],
-            "D": ["C"], "C": ["B", "D"],
+            "A": ["B"],
+            "B": ["A", "C"],
+            "D": ["C"],
+            "C": ["B", "D"],
         }
         costs = {
-            ("A", "B"): 0.1, ("B", "C"): 0.1, ("C", "D"): 0.1,
-            ("B", "A"): 0.1, ("C", "B"): 0.1, ("D", "C"): 0.1,
-            ("A", "D"): 0.5, ("B", "D"): 0.3, ("C", "A"): 0.3,
-            ("D", "A"): 0.5, ("B", "A"): 0.1, ("C", "A"): 0.3,
+            ("A", "B"): 0.1,
+            ("B", "C"): 0.1,
+            ("C", "D"): 0.1,
+            ("B", "A"): 0.1,
+            ("C", "B"): 0.1,
+            ("D", "C"): 0.1,
+            ("A", "D"): 0.5,
+            ("B", "D"): 0.3,
+            ("C", "A"): 0.3,
+            ("D", "A"): 0.5,
+            ("B", "A"): 0.1,
+            ("C", "A"): 0.3,
         }
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(
@@ -271,17 +303,26 @@ class TestBidirectionalBeamSearch(unittest.TestCase):
     def test_bidirectional_meets_in_middle(self):
         """Forward from A reaches C, backward from E reaches C."""
         graph = {
-            "A": ["B"], "B": ["C"],
-            "E": ["D"], "D": ["C"],
+            "A": ["B"],
+            "B": ["C"],
+            "E": ["D"],
+            "D": ["C"],
         }
         costs = {
-            ("A", "B"): 0.1, ("B", "C"): 0.1,
-            ("E", "D"): 0.1, ("D", "C"): 0.1,
+            ("A", "B"): 0.1,
+            ("B", "C"): 0.1,
+            ("E", "D"): 0.1,
+            ("D", "C"): 0.1,
             # Forward-direction costs for rescoring stitched path
-            ("C", "D"): 0.1, ("D", "E"): 0.1,
+            ("C", "D"): 0.1,
+            ("D", "E"): 0.1,
             # Heuristic estimates
-            ("A", "E"): 0.9, ("B", "E"): 0.6, ("C", "E"): 0.3,
-            ("E", "A"): 0.9, ("D", "A"): 0.6, ("C", "A"): 0.3,
+            ("A", "E"): 0.9,
+            ("B", "E"): 0.6,
+            ("C", "E"): 0.3,
+            ("E", "A"): 0.9,
+            ("D", "A"): 0.6,
+            ("C", "A"): 0.3,
         }
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(
@@ -300,8 +341,10 @@ class TestBidirectionalBeamSearch(unittest.TestCase):
         costs = {("A", "B"): 0.1, ("C", "D"): 0.1}
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(
-            knowledge_base=self.kb, search_space=mock_space,
-            beam_width=5, max_expansions=20,
+            knowledge_base=self.kb,
+            search_space=mock_space,
+            beam_width=5,
+            max_expansions=20,
         )
 
         path = search.find_path_bidirectional("A", "D", target_length=4)
@@ -350,16 +393,26 @@ class TestBidirectionalBeamSearch(unittest.TestCase):
     def test_bidirectional_no_cycles(self):
         """Stitched paths don't contain duplicate nodes."""
         graph = {
-            "A": ["B", "C"], "B": ["C"],
-            "D": ["B", "C"], "C": ["B"],
+            "A": ["B", "C"],
+            "B": ["C"],
+            "D": ["B", "C"],
+            "C": ["B"],
         }
         costs = {
-            ("A", "B"): 0.1, ("A", "C"): 0.2,
-            ("B", "C"): 0.1, ("C", "B"): 0.1,
-            ("D", "B"): 0.1, ("D", "C"): 0.2,
-            ("B", "D"): 0.1, ("C", "D"): 0.2,
-            ("A", "D"): 0.5, ("B", "D"): 0.3, ("C", "D"): 0.3,
-            ("D", "A"): 0.5, ("B", "A"): 0.3, ("C", "A"): 0.3,
+            ("A", "B"): 0.1,
+            ("A", "C"): 0.2,
+            ("B", "C"): 0.1,
+            ("C", "B"): 0.1,
+            ("D", "B"): 0.1,
+            ("D", "C"): 0.2,
+            ("B", "D"): 0.1,
+            ("C", "D"): 0.2,
+            ("A", "D"): 0.5,
+            ("B", "D"): 0.3,
+            ("C", "D"): 0.3,
+            ("D", "A"): 0.5,
+            ("B", "A"): 0.3,
+            ("C", "A"): 0.3,
         }
         mock_space = MockSearchSpace(graph, costs)
         search = BeamSearch(

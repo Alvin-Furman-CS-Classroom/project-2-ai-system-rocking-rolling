@@ -91,8 +91,7 @@ LOWLEVEL_RESPONSE = {
                 "mfcc": {
                     "mean": [0.0] * 13,
                     "cov": [
-                        [1.0 if i == j else 0.0 for j in range(13)]
-                        for i in range(13)
+                        [1.0 if i == j else 0.0 for j in range(13)] for i in range(13)
                     ],
                 },
                 "spectral_centroid": {"mean": 1500.0},
@@ -132,8 +131,7 @@ LOWLEVEL_RESPONSE = {
                 "mfcc": {
                     "mean": [0.1] * 13,
                     "cov": [
-                        [1.0 if i == j else 0.0 for j in range(13)]
-                        for i in range(13)
+                        [1.0 if i == j else 0.0 for j in range(13)] for i in range(13)
                     ],
                 },
                 "spectral_centroid": {"mean": 1600.0},

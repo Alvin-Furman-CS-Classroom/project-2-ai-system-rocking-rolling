@@ -77,11 +77,22 @@ class PlaylistFeedback:
 class UserProfile:
     """Persisted user preferences learned from feedback."""
 
-    dimension_weights: dict[str, float] = field(default_factory=lambda: {
-        "key": 0.15, "tempo": 0.20, "energy": 0.15, "loudness": 0.05,
-        "mood": 0.15, "timbre": 0.15, "genre": 0.05, "tag": 0.10,
-        "popularity": 0.0, "artist": 0.10, "era": 0.05, "mb_genre": 0.0,
-    })
+    dimension_weights: dict[str, float] = field(
+        default_factory=lambda: {
+            "key": 0.15,
+            "tempo": 0.20,
+            "energy": 0.15,
+            "loudness": 0.05,
+            "mood": 0.15,
+            "timbre": 0.15,
+            "genre": 0.05,
+            "tag": 0.10,
+            "popularity": 0.0,
+            "artist": 0.10,
+            "era": 0.05,
+            "mb_genre": 0.0,
+        }
+    )
     preferred_genres: dict[str, float] = field(default_factory=dict)
     preferred_energy_arc: str = "flat"
     feedback_history: list[PlaylistFeedback] = field(default_factory=list)

@@ -72,7 +72,9 @@ def main() -> None:
 
     for te in playlist.explanation.track_explanations:
         role_tag = f" [{te.role}]" if te.role != "waypoint" else ""
-        print(f"  {te.position + 1}. {te.title or te.mbid} — {te.artist or 'Unknown'}{role_tag}")
+        print(
+            f"  {te.position + 1}. {te.title or te.mbid} — {te.artist or 'Unknown'}{role_tag}"
+        )
 
         if te.incoming_transition:
             it = te.incoming_transition
@@ -84,9 +86,11 @@ def main() -> None:
 
     # Quality metrics
     qm = playlist.explanation.quality_metrics
-    print(f"Quality: avg={qm.get('avg_compatibility', 0):.0%}, "
-          f"weakest={qm.get('weakest_transition', 0):.0%}, "
-          f"strongest={qm.get('strongest_transition', 0):.0%}")
+    print(
+        f"Quality: avg={qm.get('avg_compatibility', 0):.0%}, "
+        f"weakest={qm.get('weakest_transition', 0):.0%}, "
+        f"strongest={qm.get('strongest_transition', 0):.0%}"
+    )
 
     # Constraint results
     if playlist.constraints_applied:

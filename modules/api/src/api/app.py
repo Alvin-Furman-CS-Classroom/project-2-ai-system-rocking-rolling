@@ -116,9 +116,7 @@ def playlist():
     beam_width = int(beam_width_str)
 
     if not source_mbid or not dest_mbid:
-        return jsonify(
-            {"error": "Both source_mbid and dest_mbid are required."}
-        ), 400
+        return jsonify({"error": "Both source_mbid and dest_mbid are required."}), 400
 
     try:
         # Fetch features for source and destination
@@ -227,4 +225,6 @@ def playlist():
         )
 
     except Exception as e:
-        return jsonify({"error": f"Internal error during playlist generation: {e}"}), 500
+        return jsonify(
+            {"error": f"Internal error during playlist generation: {e}"}
+        ), 500

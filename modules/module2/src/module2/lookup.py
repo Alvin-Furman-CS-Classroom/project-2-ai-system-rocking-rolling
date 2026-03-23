@@ -11,10 +11,8 @@ MB_HEADERS = {
     "Accept": "application/json",
 }
 LB_ALGOS = [
-    "session_based_days_9000_session_300"
-    "_contribution_5_threshold_15_limit_50_skip_30",
-    "session_based_days_7500_session_300"
-    "_contribution_5_threshold_15_limit_50_skip_30",
+    "session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30",
+    "session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30",
     "session_based_days_7500_session_300"
     "_contribution_5_threshold_15_limit_50_skip_30"
     "_top_n_listeners_1000",
@@ -69,7 +67,9 @@ def search_recording(query: str) -> None:
             except Exception:
                 pass
         if seen_mbids:
-            print(f"  {title} - {artist}: {len(seen_mbids)} neighbors ({algo_hits} algos)")
+            print(
+                f"  {title} - {artist}: {len(seen_mbids)} neighbors ({algo_hits} algos)"
+            )
         else:
             print(f"  {title} - {artist}: no LB data")
 
@@ -101,7 +101,11 @@ def check_mbid(mbid: str) -> None:
     all_neighbors: dict[str, dict] = {}
     algo_counts: dict[str, int] = {}
     for algo in LB_ALGOS:
-        short_name = algo.split("days_")[1].split("_session")[0] if "days_" in algo else algo[:20]
+        short_name = (
+            algo.split("days_")[1].split("_session")[0]
+            if "days_" in algo
+            else algo[:20]
+        )
         payload = [{"recording_mbids": [mbid], "algorithm": algo}]
         try:
             r = requests.post(lb_url, json=payload, timeout=10)
@@ -109,13 +113,18 @@ def check_mbid(mbid: str) -> None:
             algo_counts[short_name] = len(data)
             for n in data:
                 n_mbid = n.get("recording_mbid", "")
-                if n_mbid and (n_mbid not in all_neighbors or n.get("score", 0) > all_neighbors[n_mbid].get("score", 0)):
+                if n_mbid and (
+                    n_mbid not in all_neighbors
+                    or n.get("score", 0) > all_neighbors[n_mbid].get("score", 0)
+                ):
                     n["_algo"] = short_name
                     all_neighbors[n_mbid] = n
         except Exception:
             algo_counts[short_name] = 0
 
-    print(f"  ListenBrainz neighbors: {len(all_neighbors)} (merged from {len(LB_ALGOS)} algorithms)")
+    print(
+        f"  ListenBrainz neighbors: {len(all_neighbors)} (merged from {len(LB_ALGOS)} algorithms)"
+    )
     for name, count in algo_counts.items():
         print(f"    days_{name}: {count}")
     top = sorted(all_neighbors.values(), key=lambda x: -x.get("score", 0))[:5]
@@ -146,7 +155,9 @@ def main() -> int:
         description="Look up MusicBrainz recording IDs and check data availability."
     )
     parser.add_argument(
-        "--search", type=str, help="Search for a recording by name (e.g. 'Bohemian Rhapsody Queen')"
+        "--search",
+        type=str,
+        help="Search for a recording by name (e.g. 'Bohemian Rhapsody Queen')",
     )
     parser.add_argument(
         "--check", type=str, help="Check data availability for a specific MBID"

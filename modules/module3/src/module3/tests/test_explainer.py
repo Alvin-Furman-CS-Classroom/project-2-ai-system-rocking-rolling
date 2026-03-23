@@ -215,7 +215,11 @@ class TestGeneratePlaylistSummary(unittest.TestCase):
 
 class TestGenerateQualityMetrics(unittest.TestCase):
     def test_computes_metrics(self):
-        transitions = [_make_transition(0.8), _make_transition(0.6), _make_transition(0.9)]
+        transitions = [
+            _make_transition(0.8),
+            _make_transition(0.6),
+            _make_transition(0.9),
+        ]
         metrics = generate_quality_metrics(transitions)
 
         self.assertAlmostEqual(metrics["avg_compatibility"], 0.7666, places=3)

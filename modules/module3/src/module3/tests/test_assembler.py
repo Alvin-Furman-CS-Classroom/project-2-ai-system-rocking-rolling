@@ -11,7 +11,9 @@ from module3.data_models import AssembledPlaylist, PlaylistFeedback, UserProfile
 from module3.playlist_assembler import PlaylistAssembler
 
 
-def _make_track(mbid: str, title: str = "Track", artist: str = "Artist") -> TrackFeatures:
+def _make_track(
+    mbid: str, title: str = "Track", artist: str = "Artist"
+) -> TrackFeatures:
     return TrackFeatures(
         mbid=mbid,
         title=title,
@@ -67,7 +69,9 @@ class MockSearchSpace:
     def get_transition_cost(self, from_mbid: str, to_mbid: str) -> float | None:
         return 0.2
 
-    def get_transition_result(self, from_mbid: str, to_mbid: str) -> TransitionResult | None:
+    def get_transition_result(
+        self, from_mbid: str, to_mbid: str
+    ) -> TransitionResult | None:
         return _make_transition()
 
 

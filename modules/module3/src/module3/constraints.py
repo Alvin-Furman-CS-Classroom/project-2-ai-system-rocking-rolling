@@ -40,9 +40,7 @@ class PlaylistConstraint(ABC):
     weight: float = 1.0
 
     @abstractmethod
-    def evaluate(
-        self, tracks: list[TrackFeatures]
-    ) -> ConstraintResult:
+    def evaluate(self, tracks: list[TrackFeatures]) -> ConstraintResult:
         """Evaluate this constraint against a playlist."""
         ...
 
@@ -167,23 +165,31 @@ class EnergyArcConstraint(PlaylistConstraint):
             # First half should decrease
             for i in range(1, mid):
                 if energies[i] > energies[i - 1] * 1.15:
-                    violations.append(f"Energy should decrease in first half at position {i + 1}")
+                    violations.append(
+                        f"Energy should decrease in first half at position {i + 1}"
+                    )
                     violating_positions.append(i)
             # Second half should increase
             for i in range(mid + 1, len(energies)):
                 if energies[i] < energies[i - 1] * 0.85:
-                    violations.append(f"Energy should increase in second half at position {i + 1}")
+                    violations.append(
+                        f"Energy should increase in second half at position {i + 1}"
+                    )
                     violating_positions.append(i)
 
         elif self.target_arc == "hill":
             mid = len(energies) // 2
             for i in range(1, mid):
                 if energies[i] < energies[i - 1] * 0.85:
-                    violations.append(f"Energy should increase in first half at position {i + 1}")
+                    violations.append(
+                        f"Energy should increase in first half at position {i + 1}"
+                    )
                     violating_positions.append(i)
             for i in range(mid + 1, len(energies)):
                 if energies[i] > energies[i - 1] * 1.15:
-                    violations.append(f"Energy should decrease in second half at position {i + 1}")
+                    violations.append(
+                        f"Energy should decrease in second half at position {i + 1}"
+                    )
                     violating_positions.append(i)
 
         max_possible = max(len(tracks) - 1, 1)
@@ -212,8 +218,14 @@ class GenreVarietyConstraint(PlaylistConstraint):
         run_length = 1
 
         for i in range(1, len(tracks)):
-            g_prev = tracks[i - 1].genre_rosamerica[0] if tracks[i - 1].genre_rosamerica else None
-            g_curr = tracks[i].genre_rosamerica[0] if tracks[i].genre_rosamerica else None
+            g_prev = (
+                tracks[i - 1].genre_rosamerica[0]
+                if tracks[i - 1].genre_rosamerica
+                else None
+            )
+            g_curr = (
+                tracks[i].genre_rosamerica[0] if tracks[i].genre_rosamerica else None
+            )
 
             if g_curr and g_prev and g_curr == g_prev:
                 run_length += 1
@@ -285,7 +297,14 @@ class MoodCoherenceConstraint(PlaylistConstraint):
         for t in tracks:
             best_mood = "unknown"
             best_prob = -1.0
-            for mood_name in ["happy", "sad", "aggressive", "relaxed", "party", "acoustic"]:
+            for mood_name in [
+                "happy",
+                "sad",
+                "aggressive",
+                "relaxed",
+                "party",
+                "acoustic",
+            ]:
                 prob = t.mood_positive_probability(mood_name)
                 if prob is not None and prob > best_prob:
                     best_prob = prob
@@ -294,7 +313,11 @@ class MoodCoherenceConstraint(PlaylistConstraint):
 
         # Detect oscillations: A→B→A pattern
         for i in range(2, len(moods)):
-            if moods[i] == moods[i - 2] and moods[i] != moods[i - 1] and moods[i] != "unknown":
+            if (
+                moods[i] == moods[i - 2]
+                and moods[i] != moods[i - 1]
+                and moods[i] != "unknown"
+            ):
                 violations.append(
                     f"Mood oscillation at position {i + 1}: "
                     f"{moods[i - 2]} → {moods[i - 1]} → {moods[i]}"
@@ -389,9 +412,7 @@ def resolve_constraints(
         candidates = [c for c in candidates if c not in current_mbids]
 
         if not candidates:
-            logger.info(
-                "No alternative candidates for position %d", violating_pos
-            )
+            logger.info("No alternative candidates for position %d", violating_pos)
             break
 
         # Try each candidate, pick the one that fixes the violation

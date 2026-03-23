@@ -132,12 +132,14 @@ class TestAudioAcquisition(unittest.TestCase):
         result = self.client._acquire_audio("mbid", "Song", "Artist")
         self.assertIsNone(result)
 
-    @patch("module3.essentia_client.subprocess.run", side_effect=subprocess.TimeoutExpired(cmd="yt-dlp", timeout=60))
+    @patch(
+        "module3.essentia_client.subprocess.run",
+        side_effect=subprocess.TimeoutExpired(cmd="yt-dlp", timeout=60),
+    )
     def test_ytdlp_timeout(self, mock_run):
         """yt-dlp timeout should return None gracefully."""
         result = self.client._acquire_audio("mbid", "Song", "Artist")
         self.assertIsNone(result)
-
 
 
 class TestFeatureExtraction(unittest.TestCase):
@@ -262,7 +264,11 @@ class TestFullPipeline(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(self.client._stats["failures"], 1)
 
-    @patch.object(EssentiaClient, "_extract_features", side_effect=RuntimeError("extraction failed"))
+    @patch.object(
+        EssentiaClient,
+        "_extract_features",
+        side_effect=RuntimeError("extraction failed"),
+    )
     @patch.object(EssentiaClient, "_acquire_audio")
     @patch("module3.essentia_client.ESSENTIA_AVAILABLE", True)
     def test_extraction_failure(self, mock_acquire, mock_extract):
@@ -296,19 +302,23 @@ class TestIsAvailable(unittest.TestCase):
     @patch("module3.essentia_client.ESSENTIA_AVAILABLE", True)
     def test_available_when_installed(self):
         tmpdir = tempfile.mkdtemp()
-        client = EssentiaClient(EssentiaConfig(
-            cache_dir=f"{tmpdir}/cache",
-            audio_cache_dir=f"{tmpdir}/audio",
-        ))
+        client = EssentiaClient(
+            EssentiaConfig(
+                cache_dir=f"{tmpdir}/cache",
+                audio_cache_dir=f"{tmpdir}/audio",
+            )
+        )
         self.assertTrue(client.is_available)
 
     @patch("module3.essentia_client.ESSENTIA_AVAILABLE", False)
     def test_not_available_when_missing(self):
         tmpdir = tempfile.mkdtemp()
-        client = EssentiaClient(EssentiaConfig(
-            cache_dir=f"{tmpdir}/cache",
-            audio_cache_dir=f"{tmpdir}/audio",
-        ))
+        client = EssentiaClient(
+            EssentiaConfig(
+                cache_dir=f"{tmpdir}/cache",
+                audio_cache_dir=f"{tmpdir}/audio",
+            )
+        )
         self.assertFalse(client.is_available)
 
 
