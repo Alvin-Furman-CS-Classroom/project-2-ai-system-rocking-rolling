@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 # Guard Essentia import — it's an optional heavy dependency
 try:
-    import essentia.standard as es
+    import essentia.standard as es  # ty: ignore[unresolved-import]
 
     ESSENTIA_AVAILABLE = True
 except ImportError:

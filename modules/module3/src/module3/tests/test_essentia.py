@@ -40,6 +40,7 @@ class TestEssentiaClientCaching(unittest.TestCase):
 
         self.assertIsNotNone(result)
         self.assertIsInstance(result, TrackFeatures)
+        assert isinstance(result, TrackFeatures)
         self.assertAlmostEqual(result.bpm, 128.5)
         self.assertEqual(result.key, "A")
         self.assertEqual(result.scale, "minor")
@@ -215,7 +216,9 @@ class TestFeatureExtraction(unittest.TestCase):
         self.assertAlmostEqual(features.bpm, 128.5)
         self.assertEqual(features.key, "A")
         self.assertEqual(features.scale, "minor")
+        assert features.average_loudness is not None
         self.assertAlmostEqual(features.average_loudness, 0.65)
+        assert features.mfcc is not None
         self.assertIsNotNone(features.mfcc)
         self.assertEqual(len(features.mfcc), 13)
 
@@ -246,6 +249,7 @@ class TestFullPipeline(unittest.TestCase):
 
         self.assertIsNotNone(result)
         self.assertIsInstance(result, TrackFeatures)
+        assert isinstance(result, TrackFeatures)
         self.assertEqual(result.mbid, "pipe-mbid")
         self.assertEqual(result.title, "Test Song")
         self.assertEqual(result.artist, "Test Artist")

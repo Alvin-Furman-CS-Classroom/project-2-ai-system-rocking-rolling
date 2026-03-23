@@ -31,12 +31,13 @@ from .beam_search import BeamSearch
 from .data_models import PlaylistPath, SearchState, SimilarRecording
 from .listenbrainz_client import ListenBrainzClient, ListenBrainzConfig
 from .musicbrainz_client import MusicBrainzClient, MusicBrainzConfig
-from .search_space import SearchSpace
+from .search_space import SearchSpace, SearchSpaceProtocol
 
 __all__ = [
     # Core algorithm
     "BeamSearch",
     "SearchSpace",
+    "SearchSpaceProtocol",
     # Data models
     "PlaylistPath",
     "SearchState",

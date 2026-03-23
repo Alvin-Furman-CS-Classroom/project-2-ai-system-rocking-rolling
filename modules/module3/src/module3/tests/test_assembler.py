@@ -107,6 +107,7 @@ class TestPlaylistAssembler(unittest.TestCase):
 
         self.assertIsNotNone(result)
         self.assertIsInstance(result, AssembledPlaylist)
+        assert isinstance(result, AssembledPlaylist)
         self.assertEqual(result.length, 3)
         self.assertIn("3 tracks", result.explanation.summary)
         self.assertGreater(len(result.constraints_applied), 0)
@@ -172,6 +173,7 @@ class TestPlaylistAssembler(unittest.TestCase):
         )
 
         result = assembler.generate_playlist("a", "c", target_length=3)
+        assert result is not None
         output = result.to_static_output()
 
         self.assertIn("playlist_id", output)

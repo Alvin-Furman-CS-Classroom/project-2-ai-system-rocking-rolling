@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from module1 import MusicKnowledgeBase, TrackFeatures, TransitionResult, UserPreferences
-from module2 import BeamSearch, PlaylistPath, SearchSpace
+from module2 import BeamSearch, PlaylistPath, SearchSpace, SearchSpaceProtocol
 
 from .constraints import (
     DEFAULT_CONSTRAINTS,
@@ -41,7 +41,7 @@ class PlaylistAssembler:
     def __init__(
         self,
         knowledge_base: MusicKnowledgeBase | None = None,
-        search_space: SearchSpace | None = None,
+        search_space: SearchSpaceProtocol | None = None,
         essentia_client: EssentiaClient | None = None,
         user_profile: UserProfile | None = None,
         constraints: list[PlaylistConstraint] | None = None,

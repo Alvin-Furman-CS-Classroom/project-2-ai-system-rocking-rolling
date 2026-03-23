@@ -60,6 +60,7 @@ def main() -> None:
     if playlist is None:
         print("No path found. The tracks may not have sufficient data coverage.")
         sys.exit(1)
+    assert playlist is not None
 
     if args.json:
         print(json.dumps(playlist.to_static_output(), indent=2))

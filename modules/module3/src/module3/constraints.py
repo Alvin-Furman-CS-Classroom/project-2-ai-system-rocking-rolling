@@ -23,7 +23,7 @@ from module1 import TrackFeatures
 from .data_models import ConstraintResult
 
 if TYPE_CHECKING:
-    from module2 import SearchSpace
+    from module2 import SearchSpaceProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -218,14 +218,10 @@ class GenreVarietyConstraint(PlaylistConstraint):
         run_length = 1
 
         for i in range(1, len(tracks)):
-            g_prev = (
-                tracks[i - 1].genre_rosamerica[0]
-                if tracks[i - 1].genre_rosamerica
-                else None
-            )
-            g_curr = (
-                tracks[i].genre_rosamerica[0] if tracks[i].genre_rosamerica else None
-            )
+            _gr_prev = tracks[i - 1].genre_rosamerica
+            g_prev = _gr_prev[0] if _gr_prev else None
+            _gr_curr = tracks[i].genre_rosamerica
+            g_curr = _gr_curr[0] if _gr_curr else None
 
             if g_curr and g_prev and g_curr == g_prev:
                 run_length += 1
@@ -360,7 +356,7 @@ def evaluate_all(
 def resolve_constraints(
     tracks: list[TrackFeatures],
     constraints: list[PlaylistConstraint],
-    search_space: SearchSpace | None = None,
+    search_space: SearchSpaceProtocol | None = None,
     max_iterations: int = 10,
     max_cost_increase: float = 0.20,
 ) -> tuple[list[TrackFeatures], list[ConstraintResult]]:
