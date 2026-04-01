@@ -13,6 +13,7 @@ from module1 import MusicKnowledgeBase, TrackFeatures, TransitionResult
 from .acousticbrainz_client import AcousticBrainzClient
 from .listenbrainz_client import ListenBrainzClient
 from .musicbrainz_client import MusicBrainzClient
+from .musicbrainz_db import MusicBrainzDB
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class SearchSpace(SearchSpaceProtocol):
         self.kb = knowledge_base
         self.lb_client = lb_client or ListenBrainzClient()
         self.ab_client = ab_client or AcousticBrainzClient()
-        self.mb_client = mb_client or MusicBrainzClient()
+        self.mb_client = mb_client or MusicBrainzDB()
         self.neighborhood_size = neighborhood_size
 
         # In-memory caches
