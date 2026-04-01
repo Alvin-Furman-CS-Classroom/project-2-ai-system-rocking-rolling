@@ -1,17 +1,24 @@
-"""Flask API for computing song similarity scores using Module 1."""
+"""Flask API for Wave Guide — song similarity, playlist generation, and mood support."""
+
+from pathlib import Path
 
 import requests
 from flask import Flask, jsonify, request
 from module1 import MusicKnowledgeBase
 from module1.data_loader import load_track_from_data
 from module2 import SearchSpace
-from module3 import PlaylistAssembler
+from module4 import MoodClassifier, MoodLabel
+from module5 import PlaylistOrchestrator, PlaylistRequest, TrackInput
 
 app = Flask(__name__)
 
 ACOUSTICBRAINZ_BASE = "https://acousticbrainz.org/api/v1"
 
+_MODEL_PATH = Path(__file__).parents[3] / "module4" / "models" / "mood_classifier.pkl"
+
 kb = MusicKnowledgeBase()
+classifier = MoodClassifier.load(_MODEL_PATH)
+orchestrator = PlaylistOrchestrator(knowledge_base=kb, classifier=classifier)
 
 
 def fetch_acousticbrainz(mbid: str) -> tuple[dict, dict]:
@@ -95,76 +102,108 @@ def health():
     return jsonify({"status": "ok"})
 
 
+@app.get("/api/moods")
+def moods():
+    """Return the list of available mood labels for mood-based playlist input."""
+    return jsonify({"moods": [m.value for m in MoodLabel]})
+
+
 @app.get("/api/playlist")
 def playlist():
-    """Generate a playlist path between two songs using Module 2 beam search.
+    """Generate a playlist path between two tracks or moods.
+
+    Exactly one of source_mbid / source_mood must be provided, and exactly one
+    of dest_mbid / dest_mood must be provided.
 
     Query params:
-        source_mbid: MBID of the source/starting track
-        dest_mbid: MBID of the destination/ending track
-        length: Desired playlist length (default: 7)
-        beam_width: Beam width for search (default: 10)
+        source_mbid:  MBID of the source/starting track  (mutually exclusive with source_mood)
+        source_mood:  Mood label for the source           (mutually exclusive with source_mbid)
+        dest_mbid:    MBID of the destination track       (mutually exclusive with dest_mood)
+        dest_mood:    Mood label for the destination      (mutually exclusive with dest_mbid)
+        length:       Desired playlist length (default: 7)
+        beam_width:   Beam width for search (default: 10)
 
     Returns:
         JSON with playlist metadata including track MBIDs, transitions,
-        and compatibility scores.
+        compatibility scores, and per-track feature data for visualization.
     """
     source_mbid = request.args.get("source_mbid")
+    source_mood = request.args.get("source_mood")
     dest_mbid = request.args.get("dest_mbid")
-    length_str = request.args.get("length", "7")
-    beam_width_str = request.args.get("beam_width", "10")
-    length = int(length_str)
-    beam_width = int(beam_width_str)
+    dest_mood = request.args.get("dest_mood")
+    length = int(request.args.get("length", "7"))
+    beam_width = int(request.args.get("beam_width", "10"))
 
-    if not source_mbid or not dest_mbid:
-        return jsonify({"error": "Both source_mbid and dest_mbid are required."}), 400
+    # Validate: exactly one source and one destination
+    if not source_mbid and not source_mood:
+        return jsonify({"error": "Provide either source_mbid or source_mood."}), 400
+    if source_mbid and source_mood:
+        return jsonify({"error": "Provide only one of source_mbid or source_mood."}), 400
+    if not dest_mbid and not dest_mood:
+        return jsonify({"error": "Provide either dest_mbid or dest_mood."}), 400
+    if dest_mbid and dest_mood:
+        return jsonify({"error": "Provide only one of dest_mbid or dest_mood."}), 400
+
+    # Validate mood labels
+    valid_moods = {m.value for m in MoodLabel}
+    if source_mood and source_mood.lower() not in valid_moods:
+        return jsonify({"error": f"Unknown source_mood '{source_mood}'. Valid: {sorted(valid_moods)}"}), 400
+    if dest_mood and dest_mood.lower() not in valid_moods:
+        return jsonify({"error": f"Unknown dest_mood '{dest_mood}'. Valid: {sorted(valid_moods)}"}), 400
+
+    # For MBID inputs, pre-fetch AcousticBrainz features and seed the search space
+    # so the assembler doesn't need to re-fetch them.
+    seed_search_space = SearchSpace(knowledge_base=kb)
+
+    if source_mbid:
+        try:
+            src_low, src_high = fetch_acousticbrainz(source_mbid)
+            src_track = load_track_from_data(src_low, src_high)
+            src_track.mbid = source_mbid
+            seed_search_space.add_features(source_mbid, src_track)
+        except requests.HTTPError as e:
+            return jsonify({"error": f"Failed to fetch AcousticBrainz data for source: {e}"}), 502
+        except requests.ConnectionError:
+            return jsonify({"error": "Could not connect to AcousticBrainz API."}), 502
+
+    if dest_mbid:
+        try:
+            dst_low, dst_high = fetch_acousticbrainz(dest_mbid)
+            dst_track = load_track_from_data(dst_low, dst_high)
+            dst_track.mbid = dest_mbid
+            seed_search_space.add_features(dest_mbid, dst_track)
+        except requests.HTTPError as e:
+            return jsonify({"error": f"Failed to fetch AcousticBrainz data for destination: {e}"}), 502
+        except requests.ConnectionError:
+            return jsonify({"error": "Could not connect to AcousticBrainz API."}), 502
+
+    # Build TrackInputs
+    source_input = (
+        TrackInput(type="mbid", mbid=source_mbid)
+        if source_mbid
+        else TrackInput(type="mood", mood=source_mood)
+    )
+    dest_input = (
+        TrackInput(type="mbid", mbid=dest_mbid)
+        if dest_mbid
+        else TrackInput(type="mood", mood=dest_mood)
+    )
 
     try:
-        # Fetch features for source and destination
-        source_low, source_high = fetch_acousticbrainz(source_mbid)
-        source_track = load_track_from_data(source_low, source_high)
-        source_track.mbid = source_mbid
-    except requests.HTTPError as e:
-        return jsonify(
-            {"error": f"Failed to fetch AcousticBrainz data for source_mbid: {e}"}
-        ), 502
-    except requests.ConnectionError:
-        return jsonify({"error": "Could not connect to AcousticBrainz API."}), 502
-
-    try:
-        dest_low, dest_high = fetch_acousticbrainz(dest_mbid)
-        dest_track = load_track_from_data(dest_low, dest_high)
-        dest_track.mbid = dest_mbid
-    except requests.HTTPError as e:
-        return jsonify(
-            {"error": f"Failed to fetch AcousticBrainz data for dest_mbid: {e}"}
-        ), 502
-    except requests.ConnectionError:
-        return jsonify({"error": "Could not connect to AcousticBrainz API."}), 502
-
-    try:
-        # Initialize search space with source/dest features
-        search_space = SearchSpace(knowledge_base=kb)
-        search_space.add_features(source_mbid, source_track)
-        search_space.add_features(dest_mbid, dest_track)
-
-        # Run full Module 3 pipeline (beam search + constraints + explanations)
-        assembler = PlaylistAssembler(
-            knowledge_base=kb,
-            search_space=search_space,
-            beam_width=beam_width,
-        )
-
-        playlist = assembler.generate_playlist(
-            source_mbid=source_mbid,
-            dest_mbid=dest_mbid,
-            target_length=length,
+        playlist = orchestrator.generate(
+            PlaylistRequest(
+                source=source_input,
+                destination=dest_input,
+                length=length,
+                beam_width=beam_width,
+            ),
+            search_space=seed_search_space,
         )
 
         if playlist is None:
             return jsonify(
                 {
-                    "error": "No path found between the specified tracks.",
+                    "error": "No path found between the specified tracks or moods.",
                     "details": (
                         "Possible reasons: source/destination not in AcousticBrainz, "
                         "no similar recordings available, or search space too sparse."
@@ -172,24 +211,44 @@ def playlist():
                 }
             ), 404
 
-        # Build response with playlist metadata
-        tracks = []
-        transitions_data = []
-
+        # Build response
+        tracks_data = []
         for i, track in enumerate(playlist.tracks):
-            track_info = {
-                "position": i + 1,
-                "mbid": track.mbid,
-                "title": track.title,
-                "artist": track.artist,
-                "album": None,
-                "bpm": track.bpm,
-                "key": track.key,
-                "scale": track.scale,
-            }
-            tracks.append(track_info)
+            # Compute per-track mood classification for visualization
+            mood_label = None
+            mood_confidence = None
+            try:
+                classification = classifier.classify_track(track)
+                mood_label = classification.mood.value
+                mood_confidence = round(classification.confidence, 4)
+            except Exception:
+                pass
+
+            # Combined energy score (average of energy bands)
+            energy = None
+            bands = [track.energy_low, track.energy_mid_low, track.energy_mid_high, track.energy_high]
+            valid_bands = [b for b in bands if b is not None]
+            if valid_bands:
+                energy = round(sum(valid_bands) / len(valid_bands), 4)
+
+            tracks_data.append(
+                {
+                    "position": i + 1,
+                    "mbid": track.mbid,
+                    "title": track.title,
+                    "artist": track.artist,
+                    "album": None,
+                    "bpm": round(track.bpm) if track.bpm else None,
+                    "key": track.key,
+                    "scale": track.scale,
+                    "energy": energy,
+                    "mood_label": mood_label,
+                    "mood_confidence": mood_confidence,
+                }
+            )
 
         path = playlist.path
+        transitions_data = []
         for i, t in enumerate(path.transitions):
             transitions_data.append(
                 {
@@ -214,12 +273,14 @@ def playlist():
         return jsonify(
             {
                 "source_mbid": source_mbid,
+                "source_mood": source_mood,
                 "dest_mbid": dest_mbid,
+                "dest_mood": dest_mood,
                 "requested_length": length,
                 "actual_length": path.length,
                 "total_cost": round(path.total_cost, 4),
                 "average_compatibility": round(path.average_compatibility, 4),
-                "tracks": tracks,
+                "tracks": tracks_data,
                 "transitions": transitions_data,
                 "summary": playlist.explanation.summary,
                 "constraints": [
@@ -231,6 +292,4 @@ def playlist():
         )
 
     except Exception as e:
-        return jsonify(
-            {"error": f"Internal error during playlist generation: {e}"}
-        ), 500
+        return jsonify({"error": f"Internal error during playlist generation: {e}"}), 500
