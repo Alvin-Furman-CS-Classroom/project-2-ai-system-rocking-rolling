@@ -31,6 +31,7 @@ from .beam_search import BeamSearch
 from .data_models import PlaylistPath, SearchState, SimilarRecording
 from .listenbrainz_client import ListenBrainzClient, ListenBrainzConfig
 from .musicbrainz_client import MusicBrainzClient, MusicBrainzConfig
+from .musicbrainz_db import MusicBrainzDB, MusicBrainzDBConfig
 from .search_space import SearchSpace, SearchSpaceProtocol
 
 __all__ = [
@@ -49,4 +50,7 @@ __all__ = [
     "AcousticBrainzConfig",
     "MusicBrainzClient",
     "MusicBrainzConfig",
+    # Postgres-backed client
+    "MusicBrainzDB",
+    "MusicBrainzDBConfig",
 ]
