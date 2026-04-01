@@ -160,15 +160,16 @@ class MoodClassifier:
             else:
                 self._centroids[cls_name] = [0.5] * X.shape[1]
 
-        per_class = {
-            cls: {"precision": 0.0, "recall": 0.0, "f1": 0.0, "support": 0.0}
-            for cls in classes
-        }
+        # Evaluate on the full (refitted) model for per-class breakdown
+        y_pred = self._model.predict(X_scaled)
+        per_class_metrics = self._compute_metrics(X_scaled, y)
+
+        # CV scores for accuracy/f1 (more reliable), per-class from full refit
         return EvalMetrics(
             accuracy=mean_acc,
             f1_macro=mean_f1,
-            per_class=per_class,
-            confusion_matrix=[],
+            per_class=per_class_metrics.per_class,
+            confusion_matrix=per_class_metrics.confusion_matrix,
         )
 
     def tune_hyperparameters(
