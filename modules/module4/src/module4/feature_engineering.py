@@ -4,7 +4,10 @@ Extracts a 23-dimensional normalized [0, 1] feature vector from a TrackFeatures 
 using only lowlevel audio descriptors (not AB mood classifiers).
 """
 
+import math
+
 from module1.data_models import TrackFeatures
+from module1.rules_helpers import _log_normalize, _BAND_RANGES
 
 from .data_models import MoodLabel
 
@@ -63,23 +66,20 @@ def extract_features(track: TrackFeatures) -> list[float]:
     else:
         features.append(_clip01((float(bpm) - _BPM_MIN) / (_BPM_MAX - _BPM_MIN)))
 
-    # 1-4: Energy bands (AB stores as small floats, clip to [0, 1])
-    features.append(
-        _clip01(float(track.energy_low)) if track.energy_low is not None else 0.5
-    )
-    features.append(
-        _clip01(float(track.energy_mid_low))
-        if track.energy_mid_low is not None
-        else 0.5
-    )
-    features.append(
-        _clip01(float(track.energy_mid_high))
-        if track.energy_mid_high is not None
-        else 0.5
-    )
-    features.append(
-        _clip01(float(track.energy_high)) if track.energy_high is not None else 0.5
-    )
+    # 1-4: Energy bands — log-normalized to [0, 1] using empirical AB ranges
+    # (raw AB values are ~1e-5 to 0.1, so plain clip01 maps everything to ~0)
+    for band_name, attr_name in [
+        ("low", "energy_low"),
+        ("mid_low", "energy_mid_low"),
+        ("mid_high", "energy_mid_high"),
+        ("high", "energy_high"),
+    ]:
+        val = getattr(track, attr_name, None)
+        if val is None or val == 0.0:
+            features.append(0.5)
+        else:
+            floor, ceiling = _BAND_RANGES[band_name]
+            features.append(_clip01(_log_normalize(float(val), floor, ceiling)))
 
     # 5: average_loudness (AB stores as 0-1)
     loudness = track.average_loudness
@@ -159,14 +159,21 @@ def features_to_track(
     for i in range(11, 23):
         mfcc_out.append(float(vector[i]) * _MFCC_RANGE + _MFCC_MIN)
 
+    # Denormalize energy bands: invert log-normalization
+    def _inv_log_normalize(norm_val: float, band: str) -> float:
+        floor, ceiling = _BAND_RANGES[band]
+        return math.exp(
+            norm_val * (math.log(ceiling) - math.log(floor)) + math.log(floor)
+        )
+
     return TrackFeatures(
         mbid=f"centroid_{mood.value}" if mood else "centroid",
         bpm=bpm,
         onset_rate=onset_rate,
-        energy_low=float(vector[1]),
-        energy_mid_low=float(vector[2]),
-        energy_mid_high=float(vector[3]),
-        energy_high=float(vector[4]),
+        energy_low=_inv_log_normalize(float(vector[1]), "low"),
+        energy_mid_low=_inv_log_normalize(float(vector[2]), "mid_low"),
+        energy_mid_high=_inv_log_normalize(float(vector[3]), "mid_high"),
+        energy_high=_inv_log_normalize(float(vector[4]), "high"),
         average_loudness=float(vector[5]),
         dynamic_complexity=dynamic_complexity,
         dissonance=float(vector[7]),

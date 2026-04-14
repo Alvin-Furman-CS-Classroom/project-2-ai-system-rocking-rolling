@@ -6,7 +6,9 @@
       "Bash(uv run python -m pytest:*)",
       "WebFetch(domain:listenbrainz.readthedocs.io)",
       "WebFetch(domain:api.listenbrainz.org)",
-      "WebFetch(domain:musicbrainz.org)"
+      "WebFetch(domain:musicbrainz.org)",
+      "Bash(wc -l /mnt/hardisk/project-2-ai-system-rocking-rolling/modules/module*/src/module*/test_*.py /mnt/hardisk/project-2-ai-system-rocking-rolling/modules/module*/src/module*/tests/test_*.py)",
+      "WebFetch(domain:essentia.upf.edu)"
     ]
   }
 }

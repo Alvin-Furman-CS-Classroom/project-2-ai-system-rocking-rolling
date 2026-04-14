@@ -277,29 +277,70 @@ def _bhattacharyya_distance(
     return float(term1 + term2)
 
 
+def _log_normalize(value: float, floor: float, ceiling: float) -> float:
+    """Normalize a raw energy value to [0, 1] using log scale.
+
+    Energy perception follows Weber's law (logarithmic), so we map
+    through log space before linear rescaling.  Values outside
+    [floor, ceiling] are clamped.
+    """
+    value = max(value, floor)
+    value = min(value, ceiling)
+    return (math.log(value) - math.log(floor)) / (
+        math.log(ceiling) - math.log(floor)
+    )
+
+
+# Empirical AcousticBrainz ranges per band (floor / ceiling).
+# Derived from sampling across genres; floor is ~silent, ceiling is
+# a loud track in that band.
+_BAND_RANGES: dict[str, tuple[float, float]] = {
+    "low": (1e-5, 0.05),        # 20-150 Hz
+    "mid_low": (1e-5, 0.08),    # 150-800 Hz
+    "mid_high": (1e-5, 0.10),   # 800-4 kHz
+    "high": (1e-7, 0.01),       # 4-20 kHz
+}
+
+# Perceptual weights: mid-high carries the most "energy feel",
+# high adds brightness/excitement, mid-low adds body.
+_BAND_WEIGHTS = {
+    "low": 0.10,
+    "mid_low": 0.20,
+    "mid_high": 0.40,
+    "high": 0.30,
+}
+
+
 def compute_energy_score(
     energy_low: float,
     energy_mid_low: float,
     energy_mid_high: float,
     energy_high: float,
 ) -> float:
-    """
-    Compute weighted energy score from spectral energy bands.
+    """Compute perceptual energy score from spectral energy bands.
+
+    Each band is independently log-normalized to [0, 1] using empirical
+    AcousticBrainz ranges, then combined with perceptual weights.
+    This produces a meaningful 0-1 score where ~0.3 is calm and ~0.7+
+    is energetic.
 
     Args:
-        energy_low: Low frequency band energy
-        energy_mid_low: Mid-low frequency band energy
-        energy_mid_high: Mid-high frequency band energy
-        energy_high: High frequency band energy
+        energy_low: Low frequency band energy (20-150 Hz)
+        energy_mid_low: Mid-low frequency band energy (150-800 Hz)
+        energy_mid_high: Mid-high frequency band energy (800-4 kHz)
+        energy_high: High frequency band energy (4-20 kHz)
 
     Returns:
-        Weighted energy score
+        Perceptual energy score in [0, 1]
     """
-    return (
-        0.1 * energy_low
-        + 0.2 * energy_mid_low
-        + 0.4 * energy_mid_high
-        + 0.3 * energy_high
+    raw = {"low": energy_low, "mid_low": energy_mid_low,
+           "mid_high": energy_mid_high, "high": energy_high}
+    normalized = {
+        band: _log_normalize(raw[band], *_BAND_RANGES[band])
+        for band in _BAND_WEIGHTS
+    }
+    return sum(
+        _BAND_WEIGHTS[b] * normalized[b] for b in _BAND_WEIGHTS
     )
 
 
@@ -425,12 +466,12 @@ def loudness_compatibility_prob(
 
 
 def energy_compatibility_prob(energy1: float, energy2: float) -> float:
-    """
-    Compute energy compatibility using Gaussian decay.
+    """Compute energy compatibility using Gaussian decay.
 
-    AcousticBrainz spectral energy scores are typically 0.001-0.01.
-    σ = 0.003 calibrated to actual data range.
+    After log-normalization, energy scores live on a [0, 1] perceptual
+    scale.  σ = 0.15 mirrors loudness compatibility (same scale) and
+    tolerates moderate energy jumps while penalising large ones.
     """
     delta = abs(energy1 - energy2)
-    sigma = 0.003
+    sigma = 0.15
     return math.exp(-(delta**2) / (2.0 * sigma**2))

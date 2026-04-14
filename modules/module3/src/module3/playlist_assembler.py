@@ -2,11 +2,12 @@
 
 Pipeline:
 1. Apply user preferences (if UserProfile exists)
-2. Run beam search (Module 2's find_path_bidirectional)
-3. Resolve features for all tracks in the path
-4. Apply constraints (CSP local search)
-5. Generate explanations
-6. Return AssembledPlaylist
+2. Resolve mood-based seeds via Module 4 (if mood label given instead of MBID)
+3. Run beam search (Module 2's find_path_bidirectional)
+4. Resolve features for all tracks in the path
+5. Apply constraints (CSP local search)
+6. Generate explanations
+7. Return AssembledPlaylist
 """
 
 from __future__ import annotations
@@ -14,9 +15,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from module1 import MusicKnowledgeBase, TrackFeatures, TransitionResult, UserPreferences
 from module2 import BeamSearch, PlaylistPath, SearchSpace, SearchSpaceProtocol
+
+if TYPE_CHECKING:
+    from module4.mood_classifier import MoodClassifier
 
 from .constraints import (
     DEFAULT_CONSTRAINTS,
@@ -47,6 +52,7 @@ class PlaylistAssembler:
         constraints: list[PlaylistConstraint] | None = None,
         beam_width: int = 10,
         profile_path: Path | None = None,
+        mood_classifier: "MoodClassifier | None" = None,
     ):
         self.kb = knowledge_base or MusicKnowledgeBase()
         self.search_space = search_space
@@ -55,21 +61,59 @@ class PlaylistAssembler:
         self.constraints = constraints or list(DEFAULT_CONSTRAINTS)
         self.beam_width = beam_width
         self._profile_path = profile_path
+        self.mood_classifier = mood_classifier
+
+    def _resolve_mood_seed(
+        self,
+        search_space: SearchSpaceProtocol,
+        mood: str,
+    ) -> str:
+        """Convert a mood label into a synthetic seed MBID for beam search.
+
+        Uses Module 4's centroid track for that mood and injects it into the
+        search space so beam search can treat it like any other source/dest.
+
+        Returns the synthetic MBID (e.g. "mood:happy").
+        """
+        if self.mood_classifier is None:
+            raise RuntimeError(
+                "mood_classifier is required to use mood-based seeds. "
+                "Pass a trained MoodClassifier to PlaylistAssembler()."
+            )
+        # Lazy import keeps Module 3 independent of Module 4 at import-time.
+        from module4.data_models import MoodLabel
+
+        mood_label = MoodLabel(mood)
+        centroid_track = self.mood_classifier.get_centroid_track(mood_label)
+        synthetic_mbid = f"mood:{mood}"
+        centroid_track.mbid = synthetic_mbid
+        # Inject into search space so beam search can read its features.
+        if hasattr(search_space, "add_features"):
+            search_space.add_features(synthetic_mbid, centroid_track)
+        return synthetic_mbid
 
     def generate_playlist(
         self,
-        source_mbid: str,
-        dest_mbid: str,
+        source_mbid: str | None = None,
+        dest_mbid: str | None = None,
         target_length: int = 7,
         preferences: UserPreferences | None = None,
+        source_mood: str | None = None,
+        dest_mood: str | None = None,
     ) -> AssembledPlaylist | None:
         """Generate a complete playlist from source to destination.
+
+        Either an MBID or a mood label may be supplied for source/dest.
+        Mood labels are resolved through Module 4's MoodClassifier into
+        synthetic centroid tracks that seed the beam search.
 
         Args:
             source_mbid: MusicBrainz ID of the starting track
             dest_mbid: MusicBrainz ID of the ending track
-            target_length: Desired playlist length (number of tracks)
+            target_length: Desired playlist length
             preferences: Override preferences (otherwise uses user profile)
+            source_mood: Mood label seed (e.g. "happy") — alternative to source_mbid
+            dest_mood: Mood label seed — alternative to dest_mbid
 
         Returns:
             AssembledPlaylist with tracks, explanations, and constraint results,
@@ -89,7 +133,18 @@ class PlaylistAssembler:
         if search_space is None:
             search_space = SearchSpace(self.kb)
 
-        # Step 3: Run beam search
+        # Step 3: Resolve mood seeds via Module 4 (if provided)
+        if source_mood is not None:
+            source_mbid = self._resolve_mood_seed(search_space, source_mood)
+        if dest_mood is not None:
+            dest_mbid = self._resolve_mood_seed(search_space, dest_mood)
+
+        if not source_mbid or not dest_mbid:
+            raise ValueError(
+                "Provide either an MBID or a mood label for both source and destination."
+            )
+
+        # Step 4: Run beam search
         beam = BeamSearch(
             knowledge_base=self.kb,
             search_space=search_space,
