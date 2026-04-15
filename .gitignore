@@ -14,5 +14,5 @@ build/
 .idea/
 .vscode/
 *.egg-info/
-modules/*/models/
-!modules/*/models/.gitkeep
+.pgpass
+.envrc

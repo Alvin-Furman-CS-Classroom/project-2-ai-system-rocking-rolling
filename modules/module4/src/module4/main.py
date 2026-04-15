@@ -1,7 +1,9 @@
 """Training script for Module 4: Mood Classification.
 
 Usage:
-    python -m module4.main [--data-dir PATH] [--max-per-class N] [--model {lr,mlp,both,ensemble}] [--tune]
+    python -m module4.main --from-db [--max-per-class N] [--model {lr,mlp,both,ensemble}] [--tune]
+    python -m module4.main --synthetic [--max-per-class N] [--model both]
+    python -m module4.main [--data-dir PATH] [--max-per-class N] [--model both]
 """
 
 import argparse
@@ -11,7 +13,7 @@ from pathlib import Path
 from .data_models import MoodLabel
 from .feature_engineering import FEATURE_NAMES
 from .mood_classifier import MoodClassifier
-from .training_data import DATA_DIR, load_from_data_dir
+from .training_data import DATA_DIR, generate_synthetic_data, load_from_data_dir, load_from_db
 
 
 def _print_metrics(metrics, model_name: str) -> None:
@@ -45,8 +47,7 @@ def _print_lr_feature_importance(clf: MoodClassifier) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train mood classifier")
-    parser.add_argument("--data-dir", type=Path, default=DATA_DIR)
-    parser.add_argument("--max-per-class", type=int, default=1000)
+    parser.add_argument("--max-per-class", type=int, default=200)
     parser.add_argument(
         "--model", choices=["lr", "mlp", "both", "ensemble"], default="both"
     )
@@ -55,20 +56,58 @@ def main() -> None:
         action="store_true",
         help="Run GridSearchCV to find best hyperparameters before training",
     )
+
+    # Data source — pick one
+    source = parser.add_mutually_exclusive_group()
+    source.add_argument(
+        "--from-db",
+        action="store_true",
+        help="Build training data from Postgres (MusicBrainz) + AcousticBrainz API",
+    )
+    source.add_argument(
+        "--synthetic",
+        action="store_true",
+        help="Use synthetic training data (for testing, no external deps)",
+    )
+    source.add_argument("--data-dir", type=Path, default=None)
+
     args = parser.parse_args()
 
-    print(f"Loading training data from {args.data_dir} ...")
-    try:
-        examples = load_from_data_dir(
-            data_dir=args.data_dir,
-            max_per_class=args.max_per_class,
-        )
-    except FileNotFoundError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Load training data from the chosen source
+    if args.from_db:
+        print("Building training data from Postgres + AcousticBrainz...")
+        import logging
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
+        examples = load_from_db(max_per_class=args.max_per_class)
+
+    elif args.synthetic:
+        print(f"Generating {args.max_per_class * 6} synthetic examples...")
+        examples = generate_synthetic_data(n_per_class=args.max_per_class)
+
+    elif args.data_dir and args.data_dir != Path(""):
+        print(f"Loading training data from {args.data_dir} ...")
+        try:
+            examples = load_from_data_dir(
+                data_dir=args.data_dir,
+                max_per_class=args.max_per_class,
+            )
+        except FileNotFoundError as e:
+            print(f"Error: {e}", file=sys.stderr)
+            sys.exit(1)
+
+    else:
+        # Default: try DB, fall back to synthetic
+        print("No data source specified. Trying Postgres, then synthetic fallback...")
+        try:
+            import logging
+            logging.basicConfig(level=logging.INFO, format="%(message)s")
+            examples = load_from_db(max_per_class=args.max_per_class)
+        except Exception as e:
+            print(f"DB unavailable ({e}), falling back to synthetic data...")
+            examples = generate_synthetic_data(n_per_class=args.max_per_class)
 
     if not examples:
-        print("No training examples found. Check the data directory.", file=sys.stderr)
+        print("No training examples found.", file=sys.stderr)
         sys.exit(1)
 
     # Class distribution

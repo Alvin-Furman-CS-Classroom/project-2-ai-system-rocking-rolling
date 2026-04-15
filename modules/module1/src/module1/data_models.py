@@ -108,12 +108,14 @@ class TrackFeatures:
 
     @property
     def energy_score(self) -> float:
-        """Compute weighted energy score from frequency bands."""
-        return (
-            0.1 * self.energy_low
-            + 0.2 * self.energy_mid_low
-            + 0.4 * self.energy_mid_high
-            + 0.3 * self.energy_high
+        """Perceptual energy score in [0, 1] (log-normalized, weighted)."""
+        from .rules_helpers import compute_energy_score
+
+        return compute_energy_score(
+            self.energy_low,
+            self.energy_mid_low,
+            self.energy_mid_high,
+            self.energy_high,
         )
 
     @property

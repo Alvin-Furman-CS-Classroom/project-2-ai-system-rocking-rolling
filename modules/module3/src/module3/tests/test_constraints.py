@@ -21,17 +21,27 @@ def _make_track(
     artist_mbid: str | None = None,
     bpm: float = 120.0,
     genre: str | None = "roc",
-    energy: float = 0.005,
+    energy: float = 0.5,
     mood_happy: tuple[str, float] | None = ("happy", 0.8),
     mood_sad: tuple[str, float] | None = None,
 ) -> TrackFeatures:
+    # Energy is a perceptual 0-1 value.  Because energy_score uses
+    # log-normalization, we scale raw band values exponentially so that
+    # the 0-1 input maps linearly through log space.
+    import math
+    base_low, base_ml, base_mh, base_hi = 0.003, 0.005, 0.005, 0.0001
+    # Map energy 0→÷100, 0.5→1×, 1→×100  (exponential)
+    scale = math.pow(100, 2 * energy - 1)
     return TrackFeatures(
         mbid=mbid,
         artist=artist,
         artist_mbid=artist_mbid,
         bpm=bpm,
         genre_rosamerica=(genre, 0.9) if genre else None,
-        energy_mid_high=energy,
+        energy_low=base_low * scale,
+        energy_mid_low=base_ml * scale,
+        energy_mid_high=base_mh * scale,
+        energy_high=base_hi * scale,
         mood_happy=mood_happy,
         mood_sad=mood_sad,
     )
@@ -102,18 +112,18 @@ class TestNoRepeatedTracks(unittest.TestCase):
 class TestEnergyArcConstraint(unittest.TestCase):
     def test_rising_satisfied(self):
         tracks = [
-            _make_track(energy=0.001),
-            _make_track(energy=0.003),
-            _make_track(energy=0.006),
+            _make_track(energy=0.2),
+            _make_track(energy=0.5),
+            _make_track(energy=0.8),
         ]
         result = EnergyArcConstraint(target_arc="rising").evaluate(tracks)
         self.assertTrue(result.satisfied)
 
     def test_rising_violated(self):
         tracks = [
-            _make_track(energy=0.006),
-            _make_track(energy=0.003),
-            _make_track(energy=0.001),
+            _make_track(energy=0.8),
+            _make_track(energy=0.5),
+            _make_track(energy=0.2),
         ]
         result = EnergyArcConstraint(target_arc="rising").evaluate(tracks)
         self.assertFalse(result.satisfied)
@@ -121,24 +131,24 @@ class TestEnergyArcConstraint(unittest.TestCase):
 
     def test_falling_satisfied(self):
         tracks = [
-            _make_track(energy=0.008),
-            _make_track(energy=0.005),
-            _make_track(energy=0.002),
+            _make_track(energy=0.8),
+            _make_track(energy=0.5),
+            _make_track(energy=0.2),
         ]
         result = EnergyArcConstraint(target_arc="falling").evaluate(tracks)
         self.assertTrue(result.satisfied)
 
     def test_flat_satisfied(self):
         tracks = [
-            _make_track(energy=0.005),
-            _make_track(energy=0.005),
-            _make_track(energy=0.005),
+            _make_track(energy=0.5),
+            _make_track(energy=0.5),
+            _make_track(energy=0.5),
         ]
         result = EnergyArcConstraint(target_arc="flat").evaluate(tracks)
         self.assertTrue(result.satisfied)
 
     def test_short_playlist_always_satisfied(self):
-        tracks = [_make_track(energy=0.001), _make_track(energy=0.009)]
+        tracks = [_make_track(energy=0.2), _make_track(energy=0.9)]
         result = EnergyArcConstraint(target_arc="rising").evaluate(tracks)
         self.assertTrue(result.satisfied)
 
