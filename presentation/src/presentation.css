@@ -1,0 +1,180 @@
+/* ── Font custom properties ───────────────────────── */
+:root {
+  --font-heading: 'Noto Serif', Georgia, serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Base reset ──────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  background: #ffffff;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* ── Slide container ─────────────────────────────── */
+.slide {
+  width: 1280px;
+  height: 720px;
+  position: relative;
+  font-family: var(--font-body);
+  background: #ffffff;
+  overflow: hidden;
+  color: #1a1a1a;
+}
+
+/* ── Shared typography ───────────────────────────── */
+.slide-title {
+  position: absolute;
+  top: 60px;
+  left: 60px;
+  font-size: 42px;
+  font-weight: bold;
+  font-family: var(--font-heading);
+  color: #1a1a1a;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.slide-subtitle {
+  position: absolute;
+  top: 115px;
+  left: 60px;
+  font-size: 20px;
+  font-style: italic;
+  color: #9ca3af;
+  font-family: var(--font-heading);
+  margin: 0;
+}
+
+/* Heading elements inside slides always use the heading font */
+.slide h1,
+.slide h2,
+.slide h3 {
+  font-family: var(--font-heading);
+}
+
+/* ── Cards ───────────────────────────────────────── */
+.card {
+  background: #f5f5f5;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 20px 24px;
+}
+
+.card--orange {
+  background: #fff4ee;
+  border-color: #e8590c;
+}
+
+.card h3 {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.card p {
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ── Buttons ─────────────────────────────────────── */
+.btn {
+  background: #ffffff;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 5px;
+  padding: 0.3em 0.7em;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #1a1a1a;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn:hover, .btn.hover {
+  background: #f5f5f5;
+  border-color: #e8590c;
+}
+
+.btn.active {
+  background: #fff4ee;
+  border-color: #e8590c;
+  color: #e8590c;
+  font-weight: bold;
+}
+
+/* ── Progress bar ────────────────────────────────── */
+.progress-track {
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  height: 20px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: #e8590c;
+  transition: width 0.7s ease-out;
+  width: 0%;
+}
+
+/* ── Entrance animations ─────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* All slides animate in when they become active */
+.slide.active {
+  animation: fadeSlideUp 0.5s ease-out both;
+}
+
+/* Individual items within a slide can have their own staggered animations */
+.animate-item {
+  opacity: 0;
+}
+
+.slide.active .animate-item {
+  animation: fadeSlideUp 0.5s ease-out both;
+}
+
+/* ── Reveal.js sizing ────────────────────────────── */
+.reveal {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── Reveal.js overrides ─────────────────────────── */
+.reveal .controls { color: #e8590c; }
+.reveal .progress span { background: #e8590c; }
+
+/* fix canvas inside slides – no extra margin */
+.reveal .slides section canvas {
+  display: block;
+}
+
+/* ── Full-viewport waveform portal ───────────────── */
+.waveform-portal {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 140px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.waveform-portal .canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+.waveform-portal canvas {
+  display: block;
+  width: 100% !important;
+  height: 140px !important;
+}
