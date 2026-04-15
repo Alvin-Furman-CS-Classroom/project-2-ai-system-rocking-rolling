@@ -10,7 +10,7 @@ type Props = SketchProps & { isActive: boolean; replayKey: number };
 export const beamSearchSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => {
   let h: ThemeHelpers;
   let frame = 0;
-  const totalFrames = 240;
+  const totalFrames = 370; // ~2.5s pause after animation completes at frame ~220
   let nodes: { x: number; y: number }[] = [];
   let edges: [number, number][] = [];
   let path: { x: number; y: number }[] = [];
@@ -94,6 +94,32 @@ export const beamSearchSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => {
     const dest = nodes[1];
     const maxR = W * 0.55;
 
+    // Path line (drawn early so nodes render on top)
+    if (frame >= 130) {
+      const pathFrame = frame - 130;
+      const progress = Math.min(pathFrame / 90, 1);
+      const segCount = Math.floor(progress * (path.length - 1));
+      const segFrac  = progress * (path.length - 1) - segCount;
+
+      p.stroke(T.ORANGE); p.strokeWeight(4); p.noFill();
+      p.beginShape();
+      p.vertex(path[0].x, path[0].y);
+      for (let i = 1; i <= segCount && i < path.length; i++) {
+        p.vertex(path[i].x, path[i].y);
+      }
+      if (segCount < path.length - 1) {
+        const from = path[segCount], to = path[segCount + 1];
+        p.vertex(from.x + (to.x - from.x) * segFrac, from.y + (to.y - from.y) * segFrac);
+      }
+      p.endShape();
+
+      // Intermediate path dots (not endpoints)
+      p.noStroke(); p.fill(T.ORANGE);
+      for (let i = 1; i < Math.min(segCount, path.length - 1); i++) {
+        p.circle(path[i].x, path[i].y, 16);
+      }
+    }
+
     if (frame <= 160) {
       const fwdR = Math.min(frame * 4, maxR);
       const bwdR = Math.min(Math.max(frame - 12, 0) * 4, maxR);
@@ -156,38 +182,13 @@ export const beamSearchSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => {
         else if (dS < dD) c = T.ORANGE;
         else c = T.TEXT;
         p.noStroke(); p.fill(c);
-        ctx2d(p).globalAlpha = 0.4;
+        ctx2d(p).globalAlpha = i < 2 ? 1 : 0.4;
         p.circle(n.x, n.y, i < 2 ? 28 : 16);
         ctx2d(p).globalAlpha = 1;
       });
     }
 
-    // Path drawing phase
-    if (frame >= 130) {
-      const pathFrame = frame - 130;
-      const progress = Math.min(pathFrame / 90, 1);
-      const segCount = Math.floor(progress * (path.length - 1));
-      const segFrac  = progress * (path.length - 1) - segCount;
-
-      p.stroke(T.ORANGE); p.strokeWeight(4); p.noFill();
-      p.beginShape();
-      p.vertex(path[0].x, path[0].y);
-      for (let i = 1; i <= segCount && i < path.length; i++) {
-        p.vertex(path[i].x, path[i].y);
-      }
-      if (segCount < path.length - 1) {
-        const from = path[segCount], to = path[segCount + 1];
-        p.vertex(from.x + (to.x - from.x) * segFrac, from.y + (to.y - from.y) * segFrac);
-      }
-      p.endShape();
-
-      p.noStroke(); p.fill(T.ORANGE);
-      for (let i = 0; i <= Math.min(segCount, path.length - 1); i++) {
-        p.circle(path[i].x, path[i].y, 14);
-      }
-    }
-
-    // S/D labels
+    // S/D labels (always on top)
     p.fill(255); p.noStroke();
     p.textFont('Noto Serif'); p.textSize(15); p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
