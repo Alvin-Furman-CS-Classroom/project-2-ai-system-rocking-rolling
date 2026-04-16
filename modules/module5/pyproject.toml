@@ -1,16 +1,17 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "api"
+name = "module5"
 version = "0.1.0"
-description = "Flask API for song similarity scoring."
+description = "Playlist orchestration and system integration for Wave Guide"
 requires-python = ">=3.13"
 dependencies = [
-    "flask>=3.0.0",
-    "requests>=2.32.0",
     "module1",
     "module2",
     "module3",
     "module4",
-    "module5",
 ]
 
 [tool.uv.sources]
@@ -18,4 +19,3 @@ module1 = { workspace = true }
 module2 = { workspace = true }
 module3 = { workspace = true }
 module4 = { workspace = true }
-module5 = { workspace = true }

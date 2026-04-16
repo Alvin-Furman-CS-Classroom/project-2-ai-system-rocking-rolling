@@ -9,6 +9,7 @@ members = [
     "module2",
     "module3",
     "module4",
+    "module5",
     "wave-guide",
 ]
 
@@ -21,6 +22,8 @@ dependencies = [
     { name = "module1" },
     { name = "module2" },
     { name = "module3" },
+    { name = "module4" },
+    { name = "module5" },
     { name = "requests" },
 ]
 
@@ -30,6 +33,8 @@ requires-dist = [
     { name = "module1", editable = "modules/module1" },
     { name = "module2", editable = "modules/module2" },
     { name = "module3", editable = "modules/module3" },
+    { name = "module4", editable = "modules/module4" },
+    { name = "module5", editable = "modules/module5" },
     { name = "requests", specifier = ">=2.32.0" },
 ]
 
@@ -316,6 +321,25 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "scikit-learn", specifier = ">=1.6.0" },
     { name = "tqdm", specifier = ">=4.66.0" },
+]
+
+[[package]]
+name = "module5"
+version = "0.1.0"
+source = { editable = "modules/module5" }
+dependencies = [
+    { name = "module1" },
+    { name = "module2" },
+    { name = "module3" },
+    { name = "module4" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "module1", editable = "modules/module1" },
+    { name = "module2", editable = "modules/module2" },
+    { name = "module3", editable = "modules/module3" },
+    { name = "module4", editable = "modules/module4" },
 ]
 
 [[package]]

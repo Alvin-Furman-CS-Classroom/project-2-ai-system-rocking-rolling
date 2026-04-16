@@ -5,3 +5,6 @@ export { ResultsPanel } from "./ResultsPanel";
 export { PlaylistResults } from "./PlaylistResults";
 export { TabNavigation } from "./TabNavigation";
 export { PlaylistForm } from "./PlaylistForm";
+export { MoodPicker } from "./MoodPicker";
+export { FeatureProgressionChart } from "./FeatureProgressionChart";
+export { FeatureModal } from "./FeatureModal";

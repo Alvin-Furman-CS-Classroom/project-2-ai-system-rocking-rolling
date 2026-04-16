@@ -8,6 +8,7 @@ import {
 } from "./components";
 import { useCompare, usePlaylistGenerator } from "./hooks";
 import type { SongSearchResult } from "./api/search/client";
+import type { InputMode, MoodLabel } from "./types";
 
 function App() {
 	const [activeTab, setActiveTab] = useState<"compare" | "playlist">("compare");
@@ -15,12 +16,12 @@ function App() {
 	const [songB, setSongB] = useState<SongSearchResult | null>(null);
 	const compare = useCompare();
 
-	const [playlistSource, setPlaylistSource] = useState<SongSearchResult | null>(
-		null,
-	);
-	const [playlistDest, setPlaylistDest] = useState<SongSearchResult | null>(
-		null,
-	);
+	const [playlistSource, setPlaylistSource] = useState<SongSearchResult | null>(null);
+	const [playlistDest, setPlaylistDest] = useState<SongSearchResult | null>(null);
+	const [sourceMode, setSourceMode] = useState<InputMode>("track");
+	const [destMode, setDestMode] = useState<InputMode>("track");
+	const [sourceMood, setSourceMood] = useState<MoodLabel | null>(null);
+	const [destMood, setDestMood] = useState<MoodLabel | null>(null);
 	const [playlistLength, setPlaylistLength] = useState(7);
 	const [beamWidth, setBeamWidth] = useState(10);
 	const generatePlaylist = usePlaylistGenerator();
@@ -32,10 +33,17 @@ function App() {
 	};
 
 	const handleGeneratePlaylist = () => {
-		if (playlistSource && playlistDest) {
+		const sourceId = sourceMode === "track" ? playlistSource?.recording_mbid : undefined;
+		const destId = destMode === "track" ? playlistDest?.recording_mbid : undefined;
+		const resolvedSourceMood = sourceMode === "mood" ? (sourceMood ?? undefined) : undefined;
+		const resolvedDestMood = destMode === "mood" ? (destMood ?? undefined) : undefined;
+
+		if ((sourceId || resolvedSourceMood) && (destId || resolvedDestMood)) {
 			generatePlaylist.mutate({
-				sourceId: playlistSource.recording_mbid,
-				destId: playlistDest.recording_mbid,
+				sourceId,
+				sourceMood: resolvedSourceMood,
+				destId,
+				destMood: resolvedDestMood,
 				length: playlistLength,
 				beamWidth,
 			});
@@ -51,7 +59,7 @@ function App() {
 				<p className="text-center text-gray-400 mb-10">
 					{activeTab === "compare"
 						? "Pick two songs and compare how similar they are."
-						: "Generate a playlist path between two songs using beam search."}
+						: "Generate a playlist path between two songs or moods using beam search."}
 				</p>
 
 				<TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
@@ -100,13 +108,21 @@ function App() {
 				) : (
 					<>
 						<PlaylistForm
+							sourceMode={sourceMode}
+							destMode={destMode}
 							playlistSource={playlistSource}
 							playlistDest={playlistDest}
+							sourceMood={sourceMood}
+							destMood={destMood}
 							playlistLength={playlistLength}
 							beamWidth={beamWidth}
 							isPending={generatePlaylist.isPending}
+							onSourceModeChange={setSourceMode}
+							onDestModeChange={setDestMode}
 							onSourceChange={setPlaylistSource}
 							onDestChange={setPlaylistDest}
+							onSourceMoodChange={setSourceMood}
+							onDestMoodChange={setDestMood}
 							onLengthChange={setPlaylistLength}
 							onBeamWidthChange={setBeamWidth}
 							onSubmit={handleGeneratePlaylist}

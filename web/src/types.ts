@@ -36,6 +36,16 @@ export interface CompareResponse {
   explanation: string;
 }
 
+export type MoodLabel =
+  | "calm"
+  | "energized"
+  | "happy"
+  | "sad"
+  | "intense"
+  | "chill";
+
+export type InputMode = "track" | "mood";
+
 export interface TrackInfo {
   position: number;
   mbid: string;
@@ -45,6 +55,9 @@ export interface TrackInfo {
   bpm: number | null;
   key: string | null;
   scale: string | null;
+  energy?: number | null;
+  mood_label?: MoodLabel | null;
+  mood_confidence?: number | null;
 }
 
 export interface TransitionInfo {
@@ -58,8 +71,10 @@ export interface TransitionInfo {
 }
 
 export interface PlaylistResponse {
-  source_mbid: string;
-  dest_mbid: string;
+  source_mbid: string | null;
+  source_mood?: MoodLabel | null;
+  dest_mbid: string | null;
+  dest_mood?: MoodLabel | null;
   requested_length: number;
   actual_length: number;
   total_cost: number;

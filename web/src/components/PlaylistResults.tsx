@@ -1,4 +1,7 @@
+import { useState } from "react";
 import type { PlaylistResponse } from "../types";
+import { FeatureModal } from "./FeatureModal";
+import { FeatureProgressionChart } from "./FeatureProgressionChart";
 import { TransitionBar } from "./TransitionBar";
 
 interface PlaylistResultsProps {
@@ -6,6 +9,12 @@ interface PlaylistResultsProps {
 }
 
 export function PlaylistResults({ result }: PlaylistResultsProps) {
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const hasFeatureData = result.tracks.some(
+    (t) => t.energy != null || t.mood_label != null
+  );
+
   return (
     <div className="mt-10 rounded-xl border border-gray-800 bg-gray-900 p-8">
       <div className="text-center mb-8">
@@ -41,7 +50,7 @@ export function PlaylistResults({ result }: PlaylistResultsProps) {
                 {track.artist ?? "Unknown Artist"}
               </p>
             </div>
-            <div className="flex gap-4 text-xs text-gray-500 shrink-0">
+            <div className="flex items-center gap-3 text-xs text-gray-500 shrink-0">
               {track.bpm && (
                 <span className="tabular-nums">{track.bpm} BPM</span>
               )}
@@ -50,10 +59,33 @@ export function PlaylistResults({ result }: PlaylistResultsProps) {
                   {track.key} {track.scale ?? ""}
                 </span>
               )}
+              {track.mood_label && (
+                <span className="rounded-full bg-gray-700 px-2 py-0.5 text-gray-300 capitalize">
+                  {track.mood_label}
+                </span>
+              )}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Feature progression chart (compact inline) */}
+      {hasFeatureData && (
+        <div className="mb-8 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-medium text-gray-300">
+              Feature Progression
+            </h3>
+            <button
+              onClick={() => setModalOpen(true)}
+              className="text-xs text-indigo-400 hover:text-indigo-300 transition cursor-pointer"
+            >
+              View full visualization →
+            </button>
+          </div>
+          <FeatureProgressionChart tracks={result.tracks} compact={true} />
+        </div>
+      )}
 
       {result.summary && (
         <div className="mb-8 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
@@ -96,6 +128,12 @@ export function PlaylistResults({ result }: PlaylistResultsProps) {
           ))}
         </div>
       )}
+
+      <FeatureModal
+        tracks={result.tracks}
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </div>
   );
 }
