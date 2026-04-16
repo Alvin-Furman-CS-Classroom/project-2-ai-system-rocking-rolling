@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Deck, Slide } from "@revealjs/react";
 import type { RevealApi } from "reveal.js";
 import "reveal.js/reveal.css";
+import "reveal.js/plugin/highlight/monokai.css";
+import RevealHighlight from "reveal.js/plugin/highlight";
 import "./presentation.css";
 
 import { Title } from "./slides/Title";
@@ -17,12 +19,14 @@ import { Infrastructure } from "./slides/Infrastructure";
 import { WebUI } from "./slides/WebUI";
 import { Future } from "./slides/Future";
 import { ThankYou } from "./slides/ThankYou";
+import { ProbLog } from "./slides/ProbLog";
 
 const SLIDES = [
   Title,
   Problem,
   Architecture,
   Radar,
+  ProbLog,
   Compatibility,
   BeamSearch,
   Constraints,
@@ -55,8 +59,12 @@ export function Presentation() {
 
   return (
     <Deck
+      plugins={[RevealHighlight]}
       style={{ width: "100%", height: "100%" }}
       deckRef={handleDeckRef}
+      onReady={(deck) => {
+        setActiveIndex(deck.getIndices().h);
+      }}
       onSlideChange={(event) => {
         const e = event as Event & { indexh?: number };
         setActiveIndex(e.indexh ?? 0);
