@@ -21,7 +21,20 @@ import { Future } from "./slides/Future";
 import { ThankYou } from "./slides/ThankYou";
 import { ProbLog } from "./slides/ProbLog";
 
-const SLIDES = [
+import { DemoGenres } from "./slides/DemoGenres";
+import { DemoArtists } from "./slides/DemoArtists";
+import { DemoPreferences } from "./slides/DemoPreferences";
+import { DemoMoodJourney } from "./slides/DemoMoodJourney";
+import { DemoSuggestions } from "./slides/DemoSuggestions";
+import { DemoGenerating } from "./slides/DemoGenerating";
+import { DemoPlaylist } from "./slides/DemoPlaylist";
+
+import type { SlideProps } from "./slides/types";
+import type { DemoSlideProps, DemoState } from "./slides/demo-types";
+import { INITIAL_DEMO_STATE } from "./slides/demo-types";
+
+// Slides before the demo section
+const PRE_DEMO_SLIDES = [
   Title,
   Problem,
   Architecture,
@@ -34,17 +47,41 @@ const SLIDES = [
   Mood,
   Infrastructure,
   WebUI,
+] as React.ComponentType<SlideProps>[];
+
+// Demo slides (receive DemoSlideProps)
+const DEMO_SLIDES = [
+  DemoGenres,
+  DemoArtists,
+  DemoPreferences,
+  DemoMoodJourney,
+  DemoSuggestions,
+  DemoGenerating,
+  DemoPlaylist,
+] as React.ComponentType<DemoSlideProps>[];
+
+// Slides after the demo section
+const POST_DEMO_SLIDES = [
   Future,
   ThankYou,
-];
+] as React.ComponentType<SlideProps>[];
+
+const DEMO_START = PRE_DEMO_SLIDES.length;        // index of first demo slide
+const DEMO_END = DEMO_START + DEMO_SLIDES.length - 1; // index of last demo slide
+const TOTAL_SLIDES = PRE_DEMO_SLIDES.length + DEMO_SLIDES.length + POST_DEMO_SLIDES.length;
 
 export function Presentation() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [replayKey, setReplayKey] = useState(0);
+  const [demoState, setDemoState] = useState<DemoState>(INITIAL_DEMO_STATE);
   const deckApiRef = useRef<RevealApi | null>(null);
 
   const handleDeckRef = useCallback((ref: RevealApi | null) => {
     deckApiRef.current = ref;
+  }, []);
+
+  const goNext = useCallback(() => {
+    deckApiRef.current?.next();
   }, []);
 
   useEffect(() => {
@@ -84,14 +121,47 @@ export function Presentation() {
         },
       }}
     >
-      {SLIDES.map((SlideComponent, i) => (
-        <Slide key={i}>
+      {/* Pre-demo slides */}
+      {PRE_DEMO_SLIDES.map((SlideComponent, i) => (
+        <Slide key={`pre-${i}`}>
           <SlideComponent
             isActive={activeIndex === i}
             replayKey={activeIndex === i ? replayKey : 0}
           />
         </Slide>
       ))}
+
+      {/* Demo slides */}
+      {DEMO_SLIDES.map((SlideComponent, i) => {
+        const globalIndex = DEMO_START + i;
+        return (
+          <Slide key={`demo-${i}`}>
+            <SlideComponent
+              isActive={activeIndex === globalIndex}
+              replayKey={activeIndex === globalIndex ? replayKey : 0}
+              demoState={demoState}
+              setDemoState={setDemoState}
+              onNext={goNext}
+            />
+          </Slide>
+        );
+      })}
+
+      {/* Post-demo slides */}
+      {POST_DEMO_SLIDES.map((SlideComponent, i) => {
+        const globalIndex = DEMO_END + 1 + i;
+        return (
+          <Slide key={`post-${i}`}>
+            <SlideComponent
+              isActive={activeIndex === globalIndex}
+              replayKey={activeIndex === globalIndex ? replayKey : 0}
+            />
+          </Slide>
+        );
+      })}
     </Deck>
   );
 }
+
+// Expose for debugging
+export { DEMO_START, DEMO_END, TOTAL_SLIDES };
