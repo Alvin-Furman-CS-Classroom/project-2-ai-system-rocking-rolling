@@ -22,6 +22,19 @@ export function Mood({ isActive, replayKey }: SlideProps) {
         Supervised Classification — Logistic Regression / MLP / Ensemble
       </p>
 
+      {/* Accuracy badge */}
+      <div
+        style={{
+          position: "absolute",
+          top: 60,
+          right: 60,
+          textAlign: "right",
+        }}
+      >
+        <p style={{ fontSize: 36, fontWeight: "bold", color: "#e8590c", lineHeight: 1 }}>64.7%</p>
+        <p style={{ fontSize: 13, color: "#9ca3af", marginTop: 4 }}>max validation accuracy</p>
+      </div>
+
       {/* Scatter plot */}
       <div style={{ position: "absolute", top: 148, left: 60 }}>
         <Suspense fallback={null}>
