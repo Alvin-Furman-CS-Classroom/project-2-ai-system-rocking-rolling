@@ -38,6 +38,7 @@ const PRE_DEMO_SLIDES = [
   Title,
   Problem,
   Architecture,
+  Infrastructure,
   Radar,
   ProbLog,
   Compatibility,
@@ -45,7 +46,6 @@ const PRE_DEMO_SLIDES = [
   Constraints,
   Preferences,
   Mood,
-  Infrastructure,
   WebUI,
 ] as React.ComponentType<SlideProps>[];
 
