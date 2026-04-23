@@ -16,7 +16,7 @@ import { Constraints } from "./slides/Constraints";
 import { Preferences } from "./slides/Preferences";
 import { Mood } from "./slides/Mood";
 import { Infrastructure } from "./slides/Infrastructure";
-import { WebUI } from "./slides/WebUI";
+import { DemoCover } from "./slides/DemoCover";
 import { Future } from "./slides/Future";
 import { ThankYou } from "./slides/ThankYou";
 import { ProbLog } from "./slides/ProbLog";
@@ -46,7 +46,6 @@ const PRE_DEMO_SLIDES = [
   Constraints,
   Preferences,
   Mood,
-  WebUI,
 ] as React.ComponentType<SlideProps>[];
 
 // Demo slides (receive DemoSlideProps)
@@ -66,9 +65,10 @@ const POST_DEMO_SLIDES = [
   ThankYou,
 ] as React.ComponentType<SlideProps>[];
 
-const DEMO_START = PRE_DEMO_SLIDES.length;        // index of first demo slide
-const DEMO_END = DEMO_START + DEMO_SLIDES.length - 1; // index of last demo slide
-const TOTAL_SLIDES = PRE_DEMO_SLIDES.length + DEMO_SLIDES.length + POST_DEMO_SLIDES.length;
+const DEMO_COVER_INDEX = PRE_DEMO_SLIDES.length;
+const DEMO_START = DEMO_COVER_INDEX + 1;
+const DEMO_END = DEMO_START + DEMO_SLIDES.length - 1;
+const TOTAL_SLIDES = PRE_DEMO_SLIDES.length + 1 + DEMO_SLIDES.length + POST_DEMO_SLIDES.length;
 
 export function Presentation() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -130,6 +130,11 @@ export function Presentation() {
           />
         </Slide>
       ))}
+
+      {/* Demo cover */}
+      <Slide backgroundColor="#e8590c">
+        <DemoCover isActive={activeIndex === DEMO_COVER_INDEX} replayKey={0} />
+      </Slide>
 
       {/* Demo slides */}
       {DEMO_SLIDES.map((SlideComponent, i) => {
