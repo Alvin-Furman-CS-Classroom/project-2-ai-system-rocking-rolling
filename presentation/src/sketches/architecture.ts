@@ -45,8 +45,8 @@ export const architectureSketch: Sketch<Props> = (
     title: string,
     subtitle: string | null,
     active: boolean,
-    titleSize = 16,
-    subSize = 12,
+    titleSize = 18,
+    subSize = 13,
   ) {
     const fade = p.constrain((localFrame - delay * 6) / 18, 0, 1);
     const yOff = (1 - h.easeOut(fade)) * 14;
@@ -123,14 +123,13 @@ export const architectureSketch: Sketch<Props> = (
 
     const cx = 580;
 
-    const yTop = 10;
-    const yAPI = 95;
-    const yM3 = 180;
-    const yMid = 285;
-    const yData = 410;
+    const yTop = 20;
+    const yAPI = 154;
+    const yM3 = 288;
+    const yMid = 430;
 
     const webW = 280,
-      webH = 60;
+      webH = 72;
     const webX = cx - webW / 2;
 
     drawBox(
@@ -146,7 +145,7 @@ export const architectureSketch: Sketch<Props> = (
     drawArrow(1, cx, yTop + webH, cx, yAPI);
 
     const apiW = 460,
-      apiH = 60;
+      apiH = 72;
     drawBox(
       2,
       cx - apiW / 2,
@@ -160,9 +159,9 @@ export const architectureSketch: Sketch<Props> = (
 
     // M3 + M4 pair centered at cx
     const m3W = 380,
-      m3H = 70;
+      m3H = 80;
     const m4W = 260,
-      m4H = 70;
+      m4H = 80;
     const pairW = m3W + 20 + m4W;
     const m3X = cx - pairW / 2;
     const m4X = m3X + m3W + 20;
@@ -192,7 +191,7 @@ export const architectureSketch: Sketch<Props> = (
     );
 
     const subW = 280,
-      subH = 70;
+      subH = 80;
     const m3CX = m3X + m3W / 2;
     const m1X = m3CX - subW - 10;
     const m2X = m3CX + 10;
@@ -221,44 +220,6 @@ export const architectureSketch: Sketch<Props> = (
       true,
     );
 
-    const dW = 200,
-      dH = 48;
-    const dGap = 14;
-    const dTotalW = 3 * dW + 2 * dGap;
-    const m2CX = m2X + subW / 2;
-    const dStartX = m2CX - dTotalW / 2;
-
-    drawArrow(8, m2CX, yMid + subH, m2CX, yData - 12);
-
-    p.push();
-    ctx2d(p).globalAlpha = p.constrain((localFrame - 8 * 6) / 18, 0, 1);
-    p.stroke(T.MUTED);
-    p.strokeWeight(1.5);
-    p.line(
-      dStartX + dW / 2,
-      yData - 12,
-      dStartX + 2 * (dW + dGap) + dW / 2,
-      yData - 12,
-    );
-    p.pop();
-
-    const sources = [
-      ["MusicBrainz", "track metadata"],
-      ["AcousticBrainz", "audio features"],
-      ["ListenBrainz", "similarity graph"],
-    ] as const;
-
-    sources.forEach(([name, sub], i) => {
-      const dx = dStartX + i * (dW + dGap);
-      p.push();
-      ctx2d(p).globalAlpha = p.constrain((localFrame - (9 + i) * 6) / 18, 0, 1);
-      p.stroke(T.MUTED);
-      p.strokeWeight(1.5);
-      p.line(dx + dW / 2, yData - 12, dx + dW / 2, yData);
-      p.pop();
-      drawBox(9 + i, dx, yData, dW, dH, name, sub, false, 13, 11);
-    });
-
-    if (localFrame > 12 * 6 + 30) p.noLoop();
+    if (localFrame > 7 * 6 + 30) p.noLoop();
   };
 };
