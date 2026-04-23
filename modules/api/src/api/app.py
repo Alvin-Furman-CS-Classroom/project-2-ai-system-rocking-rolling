@@ -1,5 +1,6 @@
 """Flask API for computing song similarity scores using Module 1."""
 
+import logging
 import os
 
 import requests
@@ -8,6 +9,18 @@ from module1 import MusicKnowledgeBase
 from module1.data_loader import load_track_from_data
 from module2 import SearchSpace
 from module3 import PlaylistAssembler
+from module3 import GenreVarietyConstraint, NoRepeatedTracks, TempoSmoothnessConstraint
+
+DEMO_CONSTRAINTS = [
+    NoRepeatedTracks(),
+    GenreVarietyConstraint(),
+    TempoSmoothnessConstraint(),
+]
+
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "WARNING").upper(),
+    format="%(asctime)s %(name)s %(levelname)s %(message)s",
+)
 
 app = Flask(__name__)
 
@@ -156,6 +169,7 @@ def playlist():
             knowledge_base=kb,
             search_space=search_space,
             beam_width=beam_width,
+            constraints=DEMO_CONSTRAINTS,
         )
 
         playlist = assembler.generate_playlist(
