@@ -5,7 +5,7 @@ import { radarSketch, SONGS, DIMS } from "../sketches/radar";
 
 const ALBUM_ART: (string | null)[] = [
   "/gjwhf.jpg", // Girls Just Wanna Have Fun
-  "/cn.jpg", // Comfortably Numb
+  "/cn.png", // Comfortably Numb
   "/mozno35.jpg", // Symphony No. 35
   "/br.jpg", // Bohemian Rhapsody
 ];

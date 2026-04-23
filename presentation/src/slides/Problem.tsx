@@ -86,7 +86,7 @@ export function Problem({ isActive }: SlideProps) {
           />
 
           <image
-            href="/cn.jpg"
+            href="/cn.png"
             x={B_ART.cx - IMG_R}
             y={B_ART.cy - IMG_R}
             width={IMG_R * 2}
