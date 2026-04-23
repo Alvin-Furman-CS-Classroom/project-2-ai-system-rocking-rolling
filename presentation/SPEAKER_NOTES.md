@@ -119,17 +119,7 @@
 
 ---
 
-## Slide 11 — Preferences: Learning Your Taste
-
-- System learns from star ratings using **exponential moving average** on dimension weights
-- Formula: `w_{t+1} = α · w_{feedback} + (1 - α) · w_t`
-- Example on screen: user loved tempo flow, found mood off → tempo weight ↑, mood weight ↓
-- α ≈ 0.1 — gradual learning; one bad rating doesn't undo the model
-- No explicit preference settings needed — personalisation emerges from feedback over time
-
----
-
-## Slide 12 — Mood: Mood to Music
+## Slide 11 — Mood: Mood to Music
 
 - Lets users start from a **feeling** rather than a specific track
 - Classifier input: 23-dimensional feature vector (BPM, energy bands, loudness, dynamic complexity, dissonance, spectral centroid, onset rate, 13 MFCCs)
@@ -141,21 +131,21 @@
 
 ---
 
-## Slide 13 — Demo Cover
+## Slide 12 — Demo Cover
 
 - Transition point — pause before moving forward
 - Introduce the live demo section
 
 ---
 
-## Slide 14 — Demo: Pick Your Genres
+## Slide 13 — Demo: Pick Your Genres
 
 - User selects one or more genres to seed the artist and track pool
 - Suggested selection for demo: **Rock + Pop** — good breadth of bridging artists
 
 ---
 
-## Slide 15 — Demo: Pick Your Artists
+## Slide 14 — Demo: Pick Your Artists
 
 - Artist list pulled from MusicBrainz filtered to those with audio feature data available
 - Suggested selection: a mix like **David Bowie, Radiohead, Madonna** — stylistically distinct for interesting paths
@@ -163,7 +153,7 @@
 
 ---
 
-## Slide 16 — Demo: Your Taste Profile
+## Slide 15 — Demo: Your Taste Profile
 
 - Confirms selected genres and artists before proceeding
 - In a real deployment this profile would persist across sessions
@@ -171,7 +161,7 @@
 
 ---
 
-## Slide 17 — Demo: Your Mood Journey
+## Slide 16 — Demo: Your Mood Journey
 
 - User picks a **start mood** and **end mood** — defines the emotional arc
 - Suggested pairing for demo: **Energized → Calm** (wind-down) or **Chill → Intense** (build-up)
@@ -179,7 +169,7 @@
 
 ---
 
-## Slide 18 — Demo: Pick Your Anchor Tracks
+## Slide 17 — Demo: Pick Your Anchor Tracks
 
 - System surfaces tracks matching the selected moods, filtered by chosen artists/genres
 - Each card shows: title, artist, BPM, key/scale, mood classification
@@ -188,7 +178,7 @@
 
 ---
 
-## Slide 19 — Demo: Generating Your Playlist
+## Slide 18 — Demo: Generating Your Playlist
 
 - Live API call to Flask backend: `source_mbid`, `dest_mbid`, `length=7`, `beam_width=10`
 - Background animation shows beam search frontier expanding from both ends
@@ -197,7 +187,7 @@
 
 ---
 
-## Slide 20 — Demo: Your Playlist
+## Slide 19 — Demo: Your Playlist
 
 - **Left** — 7-track sequence with title, artist, key, BPM per track
 - **Right top** — compatibility arc (SVG): transition probabilities between consecutive tracks; highlights where connections are strong or weak
@@ -207,7 +197,7 @@
 
 ---
 
-## Slide 21 — Future: What's Next
+## Slide 20 — Future: What's Next
 
 - **Essentia Integration** — replace archived AcousticBrainz; Module 3 already has scaffolding; yt-dlp fetches audio, Essentia extracts features
 - **Weight Optimisation** — current dimension weights manually calibrated; fitting against the Spotify Million Playlist Dataset would give a principled baseline
@@ -216,7 +206,7 @@
 
 ---
 
-## Slide 22 — Thank You
+## Slide 21 — Thank You
 
 - Recap the stack: open-source data, probabilistic logic, beam search, constraint satisfaction, mood classification
 - Core goal: a playlist that feels like a journey, not a shuffle
