@@ -21,11 +21,7 @@ import { Future } from "./slides/Future";
 import { ThankYou } from "./slides/ThankYou";
 import { ProbLog } from "./slides/ProbLog";
 
-import { DemoGenres } from "./slides/DemoGenres";
-import { DemoArtists } from "./slides/DemoArtists";
-import { DemoPreferences } from "./slides/DemoPreferences";
-import { DemoMoodJourney } from "./slides/DemoMoodJourney";
-import { DemoSuggestions } from "./slides/DemoSuggestions";
+import { DemoTracks } from "./slides/DemoTracks";
 import { DemoGenerating } from "./slides/DemoGenerating";
 import { DemoPlaylist } from "./slides/DemoPlaylist";
 
@@ -50,11 +46,7 @@ const PRE_DEMO_SLIDES = [
 
 // Demo slides (receive DemoSlideProps)
 const DEMO_SLIDES = [
-  DemoGenres,
-  DemoArtists,
-  DemoPreferences,
-  DemoMoodJourney,
-  DemoSuggestions,
+  DemoTracks,
   DemoGenerating,
   DemoPlaylist,
 ] as React.ComponentType<DemoSlideProps>[];

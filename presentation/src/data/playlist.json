@@ -1,0 +1,181 @@
+{
+  "actual_length": 6,
+  "average_compatibility": 0.5548,
+  "constraints": [
+    {
+      "name": "No repeated tracks",
+      "satisfied": true,
+      "score": 1.0
+    },
+    {
+      "name": "Genre variety",
+      "satisfied": true,
+      "score": 1.0
+    },
+    {
+      "name": "Tempo smoothness",
+      "satisfied": false,
+      "score": 0.8
+    }
+  ],
+  "dest_mbid": "d3528f95-1a3f-45d2-a569-826740c0adee",
+  "quality": {
+    "avg_compatibility": 0.5547990433860539,
+    "num_transitions": 5.0,
+    "strongest_transition": 0.6919675574171291,
+    "weakest_transition": 0.3680332051269209
+  },
+  "requested_length": 7,
+  "source_mbid": "0e5f1add-c943-49a0-b824-169e7f7b82da",
+  "summary": "A journey through pop → rhy → pop → roc → ..., peaking in the middle across 6 tracks (avg compatibility: 55%).",
+  "total_cost": 2.226,
+  "tracks": [
+    {
+      "album": null,
+      "artist": "Cyndi Lauper",
+      "bpm": 120.555671692,
+      "key": "F#",
+      "mbid": "0e5f1add-c943-49a0-b824-169e7f7b82da",
+      "position": 1,
+      "scale": "major",
+      "title": "Girls Just Want to Have Fun"
+    },
+    {
+      "album": null,
+      "artist": "The Human League",
+      "bpm": 117.478561401,
+      "key": "C",
+      "mbid": "9f1a6ddb-d896-4936-9864-bcfe115c9a7d",
+      "position": 2,
+      "scale": "major",
+      "title": "Don't You Want Me (original version)"
+    },
+    {
+      "album": null,
+      "artist": "Depeche Mode",
+      "bpm": 128.079284668,
+      "key": "C",
+      "mbid": "7977f60b-726e-4c8a-9c97-95e9d2e7faa5",
+      "position": 3,
+      "scale": "major",
+      "title": "Just Can T Get Enough"
+    },
+    {
+      "album": null,
+      "artist": "Joy Division",
+      "bpm": 163.458633423,
+      "key": "A",
+      "mbid": "41746834-4a27-42f5-b651-61ef0ca59549",
+      "position": 4,
+      "scale": "minor",
+      "title": "Love Will Tear Us Apart"
+    },
+    {
+      "album": null,
+      "artist": "David Bowie",
+      "bpm": 136.481124878,
+      "key": "F",
+      "mbid": "84649f3b-6da6-4da6-8e33-a7a990b69516",
+      "position": 5,
+      "scale": "major",
+      "title": "Space Oddity"
+    },
+    {
+      "album": null,
+      "artist": "Pink Floyd",
+      "bpm": 127.094024658,
+      "key": "G",
+      "mbid": "d3528f95-1a3f-45d2-a569-826740c0adee",
+      "position": 6,
+      "scale": "major",
+      "title": "Comfortably Numb"
+    }
+  ],
+  "transitions": [
+    {
+      "components": {
+        "energy": 0.9333,
+        "genre": 0.236,
+        "key": 0.1586,
+        "loudness": 0.4861,
+        "mood": 0.9526,
+        "tempo": 0.9771,
+        "timbre": 0.4512
+      },
+      "from_mbid": "0e5f1add-c943-49a0-b824-169e7f7b82da",
+      "is_compatible": true,
+      "penalty": 0.3645,
+      "probability": 0.6355,
+      "to_mbid": "9f1a6ddb-d896-4936-9864-bcfe115c9a7d",
+      "violations": ["Key incompatible: F# major -> C major"]
+    },
+    {
+      "components": {
+        "energy": 0.9177,
+        "genre": 0.2595,
+        "key": 1.0,
+        "loudness": 0.4059,
+        "mood": 0.9062,
+        "tempo": 0.7719,
+        "timbre": 0.4858
+      },
+      "from_mbid": "9f1a6ddb-d896-4936-9864-bcfe115c9a7d",
+      "is_compatible": true,
+      "penalty": 0.308,
+      "probability": 0.692,
+      "to_mbid": "7977f60b-726e-4c8a-9c97-95e9d2e7faa5",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.4495,
+        "genre": 0.1363,
+        "key": 0.8248,
+        "loudness": 0.5928,
+        "mood": 0.5137,
+        "tempo": 0.1293,
+        "timbre": 0.0562
+      },
+      "from_mbid": "7977f60b-726e-4c8a-9c97-95e9d2e7faa5",
+      "is_compatible": true,
+      "penalty": 0.632,
+      "probability": 0.368,
+      "to_mbid": "41746834-4a27-42f5-b651-61ef0ca59549",
+      "violations": ["Tempo jump: 128 -> 163 BPM"]
+    },
+    {
+      "components": {
+        "energy": 0.6231,
+        "genre": 0.1961,
+        "key": 0.768,
+        "loudness": 0.0999,
+        "mood": 0.566,
+        "tempo": 0.3251,
+        "timbre": 0.0444
+      },
+      "from_mbid": "41746834-4a27-42f5-b651-61ef0ca59549",
+      "is_compatible": true,
+      "penalty": 0.5973,
+      "probability": 0.4027,
+      "to_mbid": "84649f3b-6da6-4da6-8e33-a7a990b69516",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9953,
+        "genre": 0.2352,
+        "key": 0.5207,
+        "loudness": 0.9899,
+        "mood": 0.7995,
+        "tempo": 0.8385,
+        "timbre": 0.5058
+      },
+      "from_mbid": "84649f3b-6da6-4da6-8e33-a7a990b69516",
+      "is_compatible": true,
+      "penalty": 0.3242,
+      "probability": 0.6758,
+      "to_mbid": "d3528f95-1a3f-45d2-a569-826740c0adee",
+      "violations": []
+    }
+  ]
+}

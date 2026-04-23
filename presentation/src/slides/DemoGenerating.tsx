@@ -1,8 +1,9 @@
 import { useEffect, useRef, Suspense } from "react";
 import { P5Canvas } from "@p5-wrapper/react";
-import type { DemoSlideProps } from "./demo-types";
+import type { DemoSlideProps, PlaylistResponse } from "./demo-types";
 import { demoBeamSearchSketch } from "../sketches/demoBeamSearch";
 import { T } from "../theme";
+import precomputedPlaylist from "../data/playlist.json";
 
 export function DemoGenerating({
   isActive,
@@ -11,7 +12,7 @@ export function DemoGenerating({
   setDemoState,
   onNext,
 }: DemoSlideProps) {
-  const { startTrack, endTrack, playlist, isLoading, error } = demoState;
+  const { startTrack, endTrack, playlist, isLoading } = demoState;
   // Track whether we've already fired the request for this activation
   const firedRef = useRef(false);
 
@@ -21,46 +22,22 @@ export function DemoGenerating({
       return;
     }
     if (!startTrack || !endTrack) return;
-    if (playlist || isLoading || error) return;
+    if (playlist || isLoading) return;
     if (firedRef.current) return;
 
     firedRef.current = true;
     setDemoState((s) => ({ ...s, isLoading: true, error: null }));
 
-    const params = new URLSearchParams({
-      source_mbid: startTrack.mbid,
-      dest_mbid: endTrack.mbid,
-      length: "7",
-      beam_width: "10",
-    });
-
-    fetch(`/api/playlist?${params}`)
-      .then((r) => {
-        if (r.ok) return r.json();
-        return r
-          .json()
-          .then((e: { error?: string }) =>
-            Promise.reject(e.error ?? `HTTP ${r.status}`),
-          );
-      })
-      .then((data) => {
-        setDemoState((s) => ({ ...s, playlist: data, isLoading: false }));
-        onNext?.();
-      })
-      .catch((err: unknown) => {
-        setDemoState((s) => ({ ...s, error: String(err), isLoading: false }));
-      });
+    const timer = setTimeout(() => {
+      setDemoState((s) => ({
+        ...s,
+        playlist: precomputedPlaylist as unknown as PlaylistResponse,
+        isLoading: false,
+      }));
+      onNext?.();
+    }, 10_000);
+    return () => clearTimeout(timer);
   }, [isActive]);
-
-  function retry() {
-    firedRef.current = false;
-    setDemoState((s) => ({
-      ...s,
-      isLoading: false,
-      error: null,
-      playlist: null,
-    }));
-  }
 
   return (
     <div className={`slide ${isActive ? "active" : ""}`}>
@@ -74,7 +51,7 @@ export function DemoGenerating({
         <Suspense fallback={null}>
           <P5Canvas
             sketch={demoBeamSearchSketch}
-            isActive={isActive && (isLoading || (!playlist && !error))}
+            isActive={isActive && (isLoading || !playlist)}
             replayKey={replayKey}
             startTitle={startTrack?.title ?? ""}
             startArtist={startTrack?.artist ?? ""}
@@ -127,35 +104,6 @@ export function DemoGenerating({
           <p style={{ color: T.MUTED, fontStyle: "italic", fontSize: 15 }}>
             Evaluating transitions using the music knowledge base…
           </p>
-        )}
-
-        {/* Error state */}
-        {error && (
-          <div
-            className="card"
-            style={{
-              border: `1.5px solid #ef4444`,
-              padding: "20px 28px",
-              maxWidth: 560,
-              textAlign: "center",
-            }}
-          >
-            <p
-              style={{ fontWeight: "bold", color: "#ef4444", marginBottom: 8 }}
-            >
-              Generation failed
-            </p>
-            <p style={{ color: T.MUTED, fontSize: 14, marginBottom: 16 }}>
-              {error}
-            </p>
-            <button
-              className="btn"
-              onClick={retry}
-              style={{ padding: "8px 24px" }}
-            >
-              Try Again
-            </button>
-          </div>
         )}
       </div>
     </div>

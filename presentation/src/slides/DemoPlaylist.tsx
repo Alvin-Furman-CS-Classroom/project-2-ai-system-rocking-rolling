@@ -24,7 +24,7 @@ export function DemoPlaylist({ isActive, demoState }: DemoSlideProps) {
       <div
         style={{
           position: "absolute",
-          top: 62,
+          top: 70,
           right: T.MARGIN,
           display: "flex",
           gap: 10,
@@ -38,7 +38,7 @@ export function DemoPlaylist({ isActive, demoState }: DemoSlideProps) {
       <div
         style={{
           position: "absolute",
-          top: 108,
+          top: 120,
           left: T.MARGIN,
           right: T.MARGIN,
           bottom: 40,
@@ -235,6 +235,7 @@ function TrackRow({ track, index }: { track: PlaylistTrack; index: number }) {
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
+            marginBottom: 4,
           }}
         >
           {track.title ?? "Unknown"}
