@@ -12,6 +12,7 @@ import { Architecture } from "./slides/Architecture";
 import { Radar } from "./slides/Radar";
 import { Compatibility } from "./slides/Compatibility";
 import { BeamSearch } from "./slides/BeamSearch";
+import { FrontierWidening } from "./slides/FrontierWidening";
 import { Constraints } from "./slides/Constraints";
 import { Preferences } from "./slides/Preferences";
 import { Mood } from "./slides/Mood";
@@ -43,6 +44,7 @@ const PRE_DEMO_SLIDES = [
   ProbLog,
   Compatibility,
   BeamSearch,
+  FrontierWidening,
   Constraints,
   Preferences,
   Mood,
