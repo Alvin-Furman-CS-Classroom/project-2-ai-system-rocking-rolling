@@ -1,0 +1,9 @@
+% ============================================================
+\section{Evaluation Methodology}
+% ============================================================
+
+We evaluated four aspects: algorithmic correctness (music-theoretic functions produce the expected scores on synthetic and real inputs), integration correctness (modules compose into a working pipeline), performance (Postgres mirror vs.\ public API latency), and constraint behaviour (the min-conflicts solver satisfies hard constraints and reduces soft violations).
+
+Tests run under Python~3.13 with \texttt{uv}, against a local PostgreSQL~15 instance loaded with the full MusicBrainz dump (38M recordings) plus live access to ListenBrainz and AcousticBrainz. Fixtures combine real MBIDs from the production database, synthetic vectors with known properties for edge cases, and recorded API responses replayed through mocks. Test tracks span four genre families, five decades, and a range of popularity levels, with deliberate gaps for missing-feature edge cases.
+
+Performance benchmarks warm the connection pool with five preliminary queries, then time 25 single-record lookups, a 25-MBID batch, and five artist-relationship traversals over wall-clock time. Each measurement is repeated three times and the mean reported. Tests mirror the source layout: Module~1 covers KB scoring; Module~2 covers beam search and data clients; Module~3 covers constraints, explanations, preference learning, and the Essentia fallback; Module~4 covers feature engineering and classifier training. All numbers in Section~\ref{sec:results} reproduce via \texttt{uv run pytest} from the repository root.

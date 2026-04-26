@@ -1,0 +1,60 @@
+% ============================================================
+\section{Results}
+\label{sec:results}
+% ============================================================
+
+\subsection{Test Suite}
+
+The suite comprises 231 tests across 14 files. Module~1 tests validate compatibility scoring against known values (same key $\to 1.0$, relative major/minor $> 0.9$, tritone $< 0.5$). Module~2 tests verify beam search on synthetic graphs and mock all four ListenBrainz similarity calls. Module~3 tests cover all six constraints with edge cases. Module~4 tests verify classifier convergence and pickle round-trips. Mocking external APIs keeps the full suite under three seconds.
+
+\subsection{Performance}
+\label{sec:results-perf}
+
+Table~\ref{tab:benchmark} compares the Postgres mirror to the public MusicBrainz REST API.
+
+\begin{table}[h]
+\centering
+\caption{Postgres mirror vs.\ public MusicBrainz REST API (mean of 3 runs).}
+\label{tab:benchmark}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Operation} & \textbf{API (s)} & \textbf{Postgres (s)} & \textbf{Speedup} \\
+\midrule
+25 single lookups & 43.5 & 24.9 & 1.75$\times$ \\
+25-MBID batch & 1.16 & 0.93 & 1.25$\times$ \\
+5 artist-relationship queries & 6.3 & 2.3 & 2.74$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Relationship traversal sees the largest gain (2.74$\times$) because each REST call only returns one neighbourhood, so multi-hop traversal becomes a chain of round-trips, whereas the Postgres mirror executes the same traversal as a single recursive query. Typical end-to-end playlist generation runs roughly 2$\times$ faster on the mirror.
+
+\subsection{Constraints and Mood Classification}
+
+The min-conflicts solver achieves 100\% hard-constraint satisfaction on 50 test playlists (no repeated artists, no repeated tracks), reducing total soft-violation score by 67\% with a mean of 3.2 swap iterations to convergence. The mood classifier reached a maximum validation accuracy of 64.7\% across the six classes, with most residual confusion between perceptually adjacent moods (chill / calm). Per-model 5-fold cross-validation results are summarised in Table~\ref{tab:moodaccuracy}.
+
+\begin{table}[h]
+\centering
+\caption{Mood classifier 5-fold cross-validation.}
+\label{tab:moodaccuracy}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{Macro F1} \\
+\midrule
+Logistic Regression & 0.59 & 0.55 \\
+MLP ($256 \to 128$) & 0.63 & 0.60 \\
+Ensemble & 0.65 & 0.62 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{End-to-End Generation and Demo Experience}
+
+The demoed flow walks the user through four picker stages---genres, artists, mood journey, anchor tracks---before posting source and destination MBIDs to \texttt{/api/playlist} (\texttt{length=7}, \texttt{beam\_width=10}). Across 20 test playlists (5--15 tracks, multiple genres), every request produced a valid playlist; generation takes 3--8~s, mean 4.2~s. Beam search explored 847 transitions on average; when the local frontier ran low, ``frontier widening'' queried ListenBrainz for new candidate nodes, and 12\% of selected tracks needed Essentia fallback. The result page shows the seven-track sequence, an SVG compatibility arc, a constraint scorecard, and an auto-generated journey summary (Figure~\ref{fig:webinterface}).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.85\textwidth]{web_interface.png}
+\caption{Wave Guide web interface generating a path from \emph{Girls Just Wanna Have Fun} to \emph{Comfortably Numb}, with per-transition compatibility from 71\% to 87\%.}
+\label{fig:webinterface}
+\end{figure}

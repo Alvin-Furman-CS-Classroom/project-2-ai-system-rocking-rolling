@@ -1,0 +1,43 @@
+% ============================================================
+\section{Module Implementation Summary}
+% ============================================================
+
+The system has four modules. Module~1 establishes scoring; Module~2 uses it for path finding; Module~3 refines paths and explains; Module~4 trains a mood classifier whose centroid lookup is the planned bridge for natural-language input (not yet wired into the live API).
+
+\subsection{Module 1: Music Theory Knowledge Base}
+
+Module~1 takes two \texttt{TrackFeatures} objects (71-dim AcousticBrainz vectors plus metadata) and returns a \texttt{TransitionResult} of 12 scores in $[0,1]$, an overall probability, and a textual explanation. The 12 dimensions are key, tempo, energy, loudness, mood, timbre, RosaMerida genre, ListenBrainz tags, popularity, MusicBrainz artist, era, and curated MB genre.
+
+Key uses Pearson correlation on rotated Krumhansl-Kessler probe-tone profiles \cite{krumhansl1990}; tempo uses Gaussian decay with $\sigma = 3 \times \mathrm{JND}$ \cite{drake1993} plus 2:1 ratio handling; timbre is the Bhattacharyya coefficient on per-track MFCC Gaussians excluding $c_0$ \cite{aucouturier2002,berenzweig2004}. Energy and loudness apply Gaussian decay over AcousticBrainz spectral bands and average-loudness/dynamic-complexity respectively. Mood reads AcousticBrainz high-level classifier probabilities; genre, tag, and MB genre use cosine or Jaccard similarity; popularity uses Gaussian decay on log-scale listen counts; artist scores high for same/related artists in the MusicBrainz graph \cite{korzeniowski2021}; era uses Gaussian decay on release-year delta \cite{schweiger2025}; MB genre follows \cite{alonso2022}. Each score is asserted as a probabilistic fact in ProbLog \cite{deraedt2007}, which combines weighted terms into the overall probability with auto-selected backend.
+
+\subsection{Module 2: Path Finding and Data Integration}
+
+Module~2 takes a source MBID, destination MBID, target length, and beam width, and returns a \texttt{PlaylistPath} of waypoint MBIDs and accumulated cost. It runs bidirectional beam search with an A* heuristic: $f(n) = g(n) + h(n)$, where $g$ is accumulated cost and $h(n) = 1 - \text{compat}(n, \text{goal})$ from Module~1. Two frontiers expand from source and destination and terminate when they meet or the target length is reached; beam width $B = 10$ retains only the top $B$ states per round.
+
+Neighbours come from four ListenBrainz similarity algorithms (two session-based with 9000- and 7500-day windows, two Top-N variants), merged for robustness. Module~2 ships four data clients: \texttt{MusicBrainzDB} (PostgreSQL with pooling and GIN indexes), a fallback REST client (1~req/sec), \texttt{AcousticBrainzClient}, and \texttt{ListenBrainzClient}.
+
+\subsection{Module 3: Playlist Assembly and Optimization}
+
+Module~3 is the orchestrator. It drives Module~2's beam search using Module~1 for per-edge scoring, applies six constraints (two hard---\texttt{NoRepeatArtists}, \texttt{NoRepeatedTracks}; four soft---energy arc, genre variety, tempo smoothness, mood coherence), and emits explanations. Violations are repaired by min-conflicts local search \cite{minton1992}: pick a violating position, test swap candidates from the search space, accept the swap if it improves the aggregate score, and re-score. The explainer produces three levels: a playlist-summary sentence, per-transition top-3 contributing dimensions, and constraint notes. Online preference learning updates per-dimension weights from 0--5 star ratings via exponential moving average, persisted as JSON. For tracks missing from AcousticBrainz, the Essentia fallback downloads audio via yt-dlp, extracts features with Essentia \cite{bogdanov2013}, and caches them.
+
+\subsection{Module 4: Mood Classification}
+
+Module~4 trains a six-class mood classifier (Calm, Chill, Sad, Happy, Energized, Intense) over genre-derived labels from the MusicBrainz mirror. Three model variants are available: logistic regression, an MLP with two hidden layers ($256 \to 128$, ReLU, early stopping), and a soft-voting ensemble. Inputs are 23-dim vectors (BPM, four energy bands, loudness, dynamic complexity, dissonance, spectral centroid, onset rate, MFCC $1$--$12$), clipped to $[0,1]$ and standardised; max validation accuracy is 64.7\%. The demo uses Module~4 in the picker UI: predicted moods filter the candidate track pool so the user selects start- and end-track MBIDs from mood-coherent shortlists. The module also stores per-class centroids (mean training vectors) and exposes \texttt{get\_centroid\_track(mood)} returning a synthetic \texttt{TrackFeatures}, intended as the eventual seed for centroid-anchored beam search; that direct integration into \texttt{/api/playlist} is future work.
+
+\subsection{Integration Dependencies}
+
+\begin{table}[h]
+\centering
+\caption{Module integration dependencies.}
+\label{tab:dependencies}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Consumer} & \textbf{Provider} & \textbf{Interface} \\
+\midrule
+Module 2 & Module 1 & per-edge \texttt{get\_compatibility()} \\
+Module 3 & Module 2 & \texttt{PlaylistPath} of MBIDs \\
+Module 3 & Module 1 & re-scoring after constraint repair \\
+API & Module 3 & \texttt{/api/playlist}, \texttt{/api/compare} \\
+\bottomrule
+\end{tabular}
+\end{table}

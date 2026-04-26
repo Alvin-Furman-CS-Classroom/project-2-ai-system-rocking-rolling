@@ -1,0 +1,32 @@
+% ============================================================
+\section{Proposal Delta}
+% ============================================================
+
+The implementation diverged from the original proposal in seven concrete ways (Table~\ref{tab:delta}).
+
+\begin{table}[h]
+\centering
+\caption{Major changes from the original proposal.}
+\label{tab:delta}
+\begin{tabular}{@{}p{3.8cm}p{4cm}p{5.4cm}@{}}
+\toprule
+\textbf{Original Plan} & \textbf{Final Implementation} & \textbf{Rationale} \\
+\midrule
+Public MusicBrainz API & Self-hosted Postgres mirror & 1~req/sec rate limit was prohibitive; mirror enables batch joins \\
+\addlinespace
+AcousticBrainz only & AcousticBrainz + Essentia fallback & AcousticBrainz archived 2022; Essentia covers $\sim$12\% of tracks \\
+\addlinespace
+Hand-tuned weighted scoring & ProbLog probabilistic logic & Declarative rules, uncertainty quantification, weight-learning hook \\
+\addlinespace
+Greedy construction & Bidirectional beam search & Avoids local optima; halves effective search depth \\
+\addlinespace
+4 dimensions & 12 dimensions & Knees \& Schedl \cite{knees2013}, Korzeniowski et al.~\cite{korzeniowski2021}, Schweiger et al.~\cite{schweiger2025} \\
+\addlinespace
+No explanations & 3-level explanation system & User demos showed unexplained playlists felt arbitrary \\
+\addlinespace
+Mood input wired into search algorithm & Module 4 trained, centroid exposed; demo uses mood only to filter UI track picker, search still MBID-only & Classifier reached 64.7\% validation accuracy; centroid-as-search-anchor wiring deferred \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The four-module architecture, exclusive use of the MusicBrainz ecosystem, the Flask + React stack, and the constraint-satisfaction approach all remained consistent with the proposal. Social playlist sharing was deprioritised due to time constraints.
