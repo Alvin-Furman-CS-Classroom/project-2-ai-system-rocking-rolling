@@ -1,17 +1,17 @@
 import type { P5CanvasInstance, Sketch, SketchProps } from '@p5-wrapper/react';
 import { T } from '../theme';
 
-export const DIMS = ['Key','Tempo','Energy','Loudness','Mood','Timbre','Genre','Tags','Popularity','Artist','Era','MB Genre'];
+export const DIMS = ['Key','Tempo','Energy','Loudness','Mood','Timbre','Genre','Tags','Popularity','Artist','Era'];
 
 export const SONGS = [
-  { name: 'Girls Just Wanna Have Fun', artist: 'Cyndi Lauper',
-    vals: [0.75,0.68,0.75,0.82,0.90,0.55,0.70,0.65,0.80,0.50,0.60,0.45] },
-  { name: 'Comfortably Numb', artist: 'Pink Floyd',
-    vals: [0.60,0.45,0.60,0.70,0.35,0.80,0.55,0.50,0.75,0.65,0.55,0.40] },
-  { name: 'Symphony No. 35', artist: 'Mozart',
-    vals: [0.85,0.55,0.40,0.50,0.60,0.90,0.95,0.30,0.40,0.70,0.20,0.80] },
-  { name: 'Bohemian Rhapsody', artist: 'Queen',
-    vals: [0.70,0.50,0.80,0.85,0.75,0.70,0.65,0.80,0.95,0.55,0.50,0.60] },
+  { name: 'Girls Just Wanna Have Fun', artist: 'Cyndi Lauper',  color: '#e91e8c',
+    vals: [0.75,0.68,0.75,0.82,0.90,0.55,0.70,0.65,0.80,0.50,0.60] },
+  { name: 'Comfortably Numb',          artist: 'Pink Floyd',    color: '#7c3aed',
+    vals: [0.60,0.45,0.60,0.70,0.35,0.80,0.55,0.50,0.75,0.65,0.55] },
+  { name: 'Symphony No. 35',           artist: 'Mozart',        color: '#d97706',
+    vals: [0.85,0.55,0.40,0.50,0.60,0.90,0.95,0.30,0.40,0.70,0.20] },
+  { name: 'Bohemian Rhapsody',         artist: 'Queen',         color: '#dc2626',
+    vals: [0.70,0.50,0.80,0.85,0.75,0.70,0.65,0.80,0.95,0.55,0.50] },
 ];
 
 type Props = SketchProps & { isActive: boolean; replayKey: number; selectedSong: number };
@@ -76,9 +76,10 @@ export const radarSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => {
       p.line(cx, cy, cx + R * Math.cos(a), cy + R * Math.sin(a));
     }
 
-    // Data polygon
-    p.fill(232, 89, 12, 50);
-    p.stroke(T.ORANGE);
+    // Data polygon — colored by song
+    const col = p.color(SONGS[targetSong].color);
+    p.fill(p.red(col), p.green(col), p.blue(col), 50);
+    p.stroke(col);
     p.strokeWeight(2);
     p.beginShape();
     for (let i = 0; i < n; i++) {
@@ -91,7 +92,7 @@ export const radarSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => {
     for (let i = 0; i < n; i++) {
       const a = angle(i);
       p.noStroke();
-      p.fill(i % 2 === 0 ? T.ORANGE : T.TEXT);
+      p.fill(col);
       p.circle(cx + R * animVals[i] * Math.cos(a), cy + R * animVals[i] * Math.sin(a), 9);
     }
 
@@ -104,7 +105,7 @@ export const radarSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => {
       const a = angle(i);
       const lx = cx + (R + 28) * Math.cos(a);
       const ly = cy + (R + 28) * Math.sin(a);
-      p.fill(i % 2 === 0 ? T.ORANGE : T.TEXT);
+      p.fill(T.TEXT);
       p.text(DIMS[i], lx, ly);
     }
 

@@ -20,7 +20,6 @@ body {
   height: 720px;
   position: relative;
   font-family: var(--font-body);
-  background: #ffffff;
   overflow: hidden;
   color: #1a1a1a;
 }
@@ -125,6 +124,11 @@ body {
 /* ── Entrance animations ─────────────────────────── */
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 

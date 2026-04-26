@@ -76,6 +76,7 @@ class MusicBrainzClient:
             RecordingMetadata with available fields populated.
         """
         if mbid in self._recording_cache:
+            logger.debug("MB recording cache hit: %s", mbid)
             return self._recording_cache[mbid]
 
         self._rate_limit()
@@ -83,11 +84,13 @@ class MusicBrainzClient:
         url = f"{self.config.base_url}/recording/{mbid}"
         params = {"inc": "releases+genres+artists", "fmt": "json"}
 
+        logger.debug("MB recording lookup: GET %s", url)
         try:
             response = self._session.get(
                 url, params=params, timeout=self.config.request_timeout
             )
             self._last_request_time = time.time()
+            logger.debug("MB recording lookup response: %d for %s", response.status_code, mbid)
 
             if response.status_code == 404:
                 meta = RecordingMetadata()
@@ -128,6 +131,11 @@ class MusicBrainzClient:
         if not uncached:
             return results
 
+        logger.debug(
+            "MB batch recording lookup: %d cached, %d uncached of %d total",
+            len(mbids) - len(uncached), len(uncached), len(mbids),
+        )
+
         # Batch via Lucene search: rid:MBID1 OR rid:MBID2 OR ...
         # Search endpoint allows up to ~100 results per request
         for i in range(0, len(uncached), 25):
@@ -139,11 +147,13 @@ class MusicBrainzClient:
             url = f"{self.config.base_url}/recording"
             params = {"query": query, "fmt": "json", "limit": 100}
 
+            logger.debug("MB batch search: GET %s (chunk %d MBIDs)", url, len(chunk))
             try:
                 response = self._session.get(
                     url, params=params, timeout=self.config.request_timeout
                 )
                 self._last_request_time = time.time()
+                logger.debug("MB batch search response: %d", response.status_code)
 
                 if response.status_code != 200:
                     logger.warning(
@@ -170,6 +180,7 @@ class MusicBrainzClient:
                     self._recording_cache[rec_id] = meta
                     results[rec_id] = meta
                     found_ids.add(rec_id)
+            logger.debug("MB batch search: found %d/%d recordings", len(found_ids), len(chunk))
 
             # Cache empty metadata for MBIDs not found in search results
             for mbid in chunk:
@@ -279,6 +290,7 @@ class MusicBrainzClient:
             Set of related artist MBIDs (members, collaborators, producers).
         """
         if artist_mbid in self._artist_rels_cache:
+            logger.debug("MB artist cache hit: %s", artist_mbid)
             return self._artist_rels_cache[artist_mbid]
 
         self._rate_limit()
@@ -286,11 +298,13 @@ class MusicBrainzClient:
         url = f"{self.config.base_url}/artist/{artist_mbid}"
         params = {"inc": "artist-rels", "fmt": "json"}
 
+        logger.debug("MB artist relationships lookup: GET %s", url)
         try:
             response = self._session.get(
                 url, params=params, timeout=self.config.request_timeout
             )
             self._last_request_time = time.time()
+            logger.debug("MB artist lookup response: %d for %s", response.status_code, artist_mbid)
 
             if response.status_code == 404:
                 self._artist_rels_cache[artist_mbid] = set()
@@ -303,6 +317,7 @@ class MusicBrainzClient:
             return set()
 
         related = self._parse_artist_relations(data)
+        logger.debug("MB artist %s: found %d related artists", artist_mbid, len(related))
         self._artist_rels_cache[artist_mbid] = related
         return related
 

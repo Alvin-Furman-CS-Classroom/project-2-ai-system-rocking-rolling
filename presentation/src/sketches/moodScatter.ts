@@ -1,24 +1,31 @@
-import type { P5CanvasInstance, Sketch, SketchProps } from '@p5-wrapper/react';
-import type { ThemeHelpers } from '../p5helpers';
-import { createThemeHelpers, ctx2d } from '../p5helpers';
-import { T } from '../theme';
+import type { P5CanvasInstance, Sketch, SketchProps } from "@p5-wrapper/react";
+import type { ThemeHelpers } from "../p5helpers";
+import { createThemeHelpers, ctx2d } from "../p5helpers";
+import { T } from "../theme";
 
-const W = 1100, H = 380;
+const W = 1160,
+  H = 420;
 
 const MOODS = [
-  { name: 'Calm',      cx: 150, cy: 180, color: T.MUTED },
-  { name: 'Chill',     cx: 290, cy: 100, color: T.MUTED },
-  { name: 'Sad',       cx: 200, cy: 60,  color: T.TEXT },
-  { name: 'Happy',     cx: 700, cy: 100, color: T.ORANGE },
-  { name: 'Energized', cx: 870, cy: 200, color: T.ORANGE },
-  { name: 'Intense',   cx: 770, cy: 320, color: T.TEXT },
+  { name: "Calm", cx: 220, cy: 250, color: T.MUTED },
+  { name: "Chill", cx: 370, cy: 150, color: T.MUTED },
+  { name: "Sad", cx: 260, cy: 120, color: T.TEXT },
+  { name: "Happy", cx: 730, cy: 130, color: T.ORANGE },
+  { name: "Energized", cx: 920, cy: 260, color: T.ORANGE },
+  { name: "Intense", cx: 810, cy: 330, color: T.TEXT },
 ] as const;
 
 type Dot = { x: number; y: number; color: string; cluster: number };
 
-type Props = SketchProps & { isActive: boolean; replayKey: number; selectedMood: number };
+type Props = SketchProps & {
+  isActive: boolean;
+  replayKey: number;
+  selectedMood: number;
+};
 
-export const moodScatterSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => {
+export const moodScatterSketch: Sketch<Props> = (
+  p: P5CanvasInstance<Props>,
+) => {
   let h: ThemeHelpers;
   let localFrame = 0;
   let selectedMood = 3;
@@ -28,7 +35,10 @@ export const moodScatterSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => 
 
   function generateDots() {
     let s = 42;
-    const rand = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; };
+    const rand = () => {
+      s = (s * 16807) % 2147483647;
+      return (s - 1) / 2147483646;
+    };
     dots = [];
     MOODS.forEach((m, mi) => {
       for (let i = 0; i < 28; i++) {
@@ -49,7 +59,7 @@ export const moodScatterSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => 
 
   p.setup = () => {
     p.createCanvas(W, H);
-    p.textFont('Noto Serif');
+    p.textFont("Noto Serif");
     h = createThemeHelpers(p);
     enter();
   };
@@ -57,8 +67,12 @@ export const moodScatterSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => 
   p.updateWithProps = (props: Props) => {
     selectedMood = props.selectedMood ?? 3;
     const replay = props.isActive && props.replayKey !== lastReplayKey;
-    if ((props.isActive && !wasActive) || replay) { enter(); p.loop(); }
-    else if (!props.isActive && wasActive) { p.noLoop(); }
+    if ((props.isActive && !wasActive) || replay) {
+      enter();
+      p.loop();
+    } else if (!props.isActive && wasActive) {
+      p.noLoop();
+    }
     wasActive = props.isActive;
     lastReplayKey = props.replayKey;
   };
@@ -70,7 +84,7 @@ export const moodScatterSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => 
     h.drawCard(0, 0, W, H, { fill: T.SURFACE });
 
     // Cluster dots (staggered fade-in per cluster)
-    dots.forEach(d => {
+    dots.forEach((d) => {
       const start = d.cluster * 12;
       const t = p.constrain((localFrame - start) / 25, 0, 1);
       if (t <= 0) return;
@@ -102,7 +116,10 @@ export const moodScatterSketch: Sketch<Props> = (p: P5CanvasInstance<Props>) => 
       const t = p.constrain((localFrame - start) / 20, 0, 1);
       ctx2d(p).globalAlpha = t;
       h.drawText(m.name, m.cx, m.cy - 75, {
-        size: 16, bold: true, color: m.color, align: 'center',
+        size: 16,
+        bold: true,
+        color: m.color,
+        align: "center",
       });
       ctx2d(p).globalAlpha = 1;
     });

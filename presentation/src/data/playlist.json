@@ -1,0 +1,316 @@
+{
+  "actual_length": 11,
+  "average_compatibility": 0.7081,
+  "constraints": [
+    {
+      "name": "No repeated tracks",
+      "satisfied": true,
+      "score": 1.0
+    },
+    {
+      "name": "Genre variety",
+      "satisfied": false,
+      "score": 0.8
+    },
+    {
+      "name": "Tempo smoothness",
+      "satisfied": true,
+      "score": 1.0
+    }
+  ],
+  "dest_mbid": "d3528f95-1a3f-45d2-a569-826740c0adee",
+  "quality": {
+    "avg_compatibility": 0.7081080481059335,
+    "num_transitions": 10.0,
+    "strongest_transition": 0.7692677706254744,
+    "weakest_transition": 0.6713684041501355
+  },
+  "requested_length": 12,
+  "source_mbid": "0e5f1add-c943-49a0-b824-169e7f7b82da",
+  "summary": "A journey through pop → roc → rhy → jaz → ..., dipping then rising across 11 tracks (avg compatibility: 71%).",
+  "total_cost": 2.9189,
+  "tracks": [
+    {
+      "album": null,
+      "artist": "Cyndi Lauper",
+      "bpm": 120.555671692,
+      "key": "F#",
+      "mbid": "0e5f1add-c943-49a0-b824-169e7f7b82da",
+      "position": 1,
+      "scale": "major",
+      "title": "Girls Just Want to Have Fun"
+    },
+    {
+      "album": null,
+      "artist": "Whitney Houston",
+      "bpm": 118.777885437,
+      "key": "C#",
+      "mbid": "900c26eb-e3a4-481d-9c3b-dd8963a7c185",
+      "position": 2,
+      "scale": "major",
+      "title": "I Wanna Dance With Somebody (Who Loves Me)"
+    },
+    {
+      "album": null,
+      "artist": "Taylor Dayne",
+      "bpm": 118.063430786,
+      "key": "G#",
+      "mbid": "58781807-35d9-4082-abb0-ab03e6ff7c92",
+      "position": 3,
+      "scale": "major",
+      "title": "Tell It to My Heart"
+    },
+    {
+      "album": null,
+      "artist": "Belinda Carlisle",
+      "bpm": 122.664512634,
+      "key": "E",
+      "mbid": "3a4ed83a-7fde-43a9-ba41-97237a90a04f",
+      "position": 4,
+      "scale": "major",
+      "title": "Heaven Is a Place on Earth"
+    },
+    {
+      "album": null,
+      "artist": "The Outfield",
+      "bpm": 129.788391113,
+      "key": "E",
+      "mbid": "767e0670-bc0b-43ea-8d9b-3269370539da",
+      "position": 5,
+      "scale": "major",
+      "title": "Your Love"
+    },
+    {
+      "album": null,
+      "artist": "Yes",
+      "bpm": 125.048217773,
+      "key": "D",
+      "mbid": "d8bb0832-9bb3-42ef-a861-ae9bf07a2089",
+      "position": 6,
+      "scale": "major",
+      "title": "Owner of a Lonely Heart"
+    },
+    {
+      "album": null,
+      "artist": "Supertramp",
+      "bpm": 120.588745117,
+      "key": "C",
+      "mbid": "97f82215-ff75-48e5-8d59-ac7145bfb3e3",
+      "position": 7,
+      "scale": "minor",
+      "title": "The Logical Song"
+    },
+    {
+      "album": null,
+      "artist": "America",
+      "bpm": 124.163658142,
+      "key": "E",
+      "mbid": "90141c46-0f99-4435-a90a-af666d6599b7",
+      "position": 8,
+      "scale": "minor",
+      "title": "A Horse With No Name"
+    },
+    {
+      "album": null,
+      "artist": "Creedence Clearwater Revisited",
+      "bpm": 116.216941833,
+      "key": "C",
+      "mbid": "b5634bbd-cf5c-4206-8063-f7f5079eaa29",
+      "position": 9,
+      "scale": "major",
+      "title": "Have You Ever Seen the Rain"
+    },
+    {
+      "album": null,
+      "artist": "The Who",
+      "bpm": 123.825645447,
+      "key": "A",
+      "mbid": "8bb5dfe7-5c39-4e77-b6b9-ab89bf042a20",
+      "position": 10,
+      "scale": "minor",
+      "title": "Behind Blue Eyes"
+    },
+    {
+      "album": null,
+      "artist": "Pink Floyd",
+      "bpm": 127.094024658,
+      "key": "G",
+      "mbid": "d3528f95-1a3f-45d2-a569-826740c0adee",
+      "position": 11,
+      "scale": "major",
+      "title": "Comfortably Numb"
+    }
+  ],
+  "transitions": [
+    {
+      "components": {
+        "energy": 0.856,
+        "genre": 0.3264,
+        "key": 0.7955,
+        "loudness": 0.9194,
+        "mood": 0.9805,
+        "tempo": 0.9924,
+        "timbre": 0.3614
+      },
+      "from_mbid": "0e5f1add-c943-49a0-b824-169e7f7b82da",
+      "is_compatible": true,
+      "penalty": 0.2741,
+      "probability": 0.7259,
+      "to_mbid": "900c26eb-e3a4-481d-9c3b-dd8963a7c185",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.888,
+        "genre": 0.342,
+        "key": 0.7955,
+        "loudness": 0.7587,
+        "mood": 0.9113,
+        "tempo": 0.9987,
+        "timbre": 0.611
+      },
+      "from_mbid": "900c26eb-e3a4-481d-9c3b-dd8963a7c185",
+      "is_compatible": true,
+      "penalty": 0.2307,
+      "probability": 0.7693,
+      "to_mbid": "58781807-35d9-4082-abb0-ab03e6ff7c92",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9757,
+        "genre": 0.2898,
+        "key": 0.4069,
+        "loudness": 0.9913,
+        "mood": 0.8212,
+        "tempo": 0.9505,
+        "timbre": 0.4585
+      },
+      "from_mbid": "58781807-35d9-4082-abb0-ab03e6ff7c92",
+      "is_compatible": true,
+      "penalty": 0.2921,
+      "probability": 0.7079,
+      "to_mbid": "3a4ed83a-7fde-43a9-ba41-97237a90a04f",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9532,
+        "genre": 0.1283,
+        "key": 1.0,
+        "loudness": 0.9304,
+        "mood": 0.7102,
+        "tempo": 0.8953,
+        "timbre": 0.3113
+      },
+      "from_mbid": "3a4ed83a-7fde-43a9-ba41-97237a90a04f",
+      "is_compatible": true,
+      "penalty": 0.2724,
+      "probability": 0.7276,
+      "to_mbid": "767e0670-bc0b-43ea-8d9b-3269370539da",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9995,
+        "genre": 0.2014,
+        "key": 0.5207,
+        "loudness": 0.98,
+        "mood": 0.6533,
+        "tempo": 0.9531,
+        "timbre": 0.4513
+      },
+      "from_mbid": "767e0670-bc0b-43ea-8d9b-3269370539da",
+      "is_compatible": true,
+      "penalty": 0.3286,
+      "probability": 0.6714,
+      "to_mbid": "d8bb0832-9bb3-42ef-a861-ae9bf07a2089",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9976,
+        "genre": 0.2001,
+        "key": 0.2989,
+        "loudness": 0.8538,
+        "mood": 0.7619,
+        "tempo": 0.9553,
+        "timbre": 0.6362
+      },
+      "from_mbid": "d8bb0832-9bb3-42ef-a861-ae9bf07a2089",
+      "is_compatible": true,
+      "penalty": 0.3224,
+      "probability": 0.6776,
+      "to_mbid": "97f82215-ff75-48e5-8d59-ac7145bfb3e3",
+      "violations": ["Key incompatible: D major -> C minor"]
+    },
+    {
+      "components": {
+        "energy": 0.9833,
+        "genre": 0.1942,
+        "key": 0.4974,
+        "loudness": 0.984,
+        "mood": 0.8105,
+        "tempo": 0.9708,
+        "timbre": 0.4288
+      },
+      "from_mbid": "97f82215-ff75-48e5-8d59-ac7145bfb3e3",
+      "is_compatible": true,
+      "penalty": 0.3015,
+      "probability": 0.6985,
+      "to_mbid": "90141c46-0f99-4435-a90a-af666d6599b7",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9788,
+        "genre": 0.3254,
+        "key": 0.768,
+        "loudness": 0.7551,
+        "mood": 0.8522,
+        "tempo": 0.8592,
+        "timbre": 0.4512
+      },
+      "from_mbid": "90141c46-0f99-4435-a90a-af666d6599b7",
+      "is_compatible": true,
+      "penalty": 0.2856,
+      "probability": 0.7144,
+      "to_mbid": "b5634bbd-cf5c-4206-8063-f7f5079eaa29",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9544,
+        "genre": 0.2757,
+        "key": 0.8248,
+        "loudness": 0.8478,
+        "mood": 0.7445,
+        "tempo": 0.8698,
+        "timbre": 0.4961
+      },
+      "from_mbid": "b5634bbd-cf5c-4206-8063-f7f5079eaa29",
+      "is_compatible": true,
+      "penalty": 0.3011,
+      "probability": 0.6989,
+      "to_mbid": "8bb5dfe7-5c39-4e77-b6b9-ab89bf042a20",
+      "violations": []
+    },
+    {
+      "components": {
+        "energy": 0.9991,
+        "genre": 0.2175,
+        "key": 0.6187,
+        "loudness": 0.399,
+        "mood": 0.8567,
+        "tempo": 0.9767,
+        "timbre": 0.4708
+      },
+      "from_mbid": "8bb5dfe7-5c39-4e77-b6b9-ab89bf042a20",
+      "is_compatible": true,
+      "penalty": 0.3105,
+      "probability": 0.6895,
+      "to_mbid": "d3528f95-1a3f-45d2-a569-826740c0adee",
+      "violations": []
+    }
+  ]
+}

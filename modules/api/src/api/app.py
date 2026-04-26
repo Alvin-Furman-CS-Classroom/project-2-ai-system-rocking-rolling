@@ -1,15 +1,31 @@
 """Flask API for computing song similarity scores using Module 1."""
 
+import logging
+import os
+
 import requests
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from module1 import MusicKnowledgeBase
 from module1.data_loader import load_track_from_data
 from module2 import SearchSpace
 from module3 import PlaylistAssembler
+from module3 import GenreVarietyConstraint, NoRepeatedTracks, TempoSmoothnessConstraint
+
+DEMO_CONSTRAINTS = [
+    NoRepeatedTracks(),
+    GenreVarietyConstraint(),
+    TempoSmoothnessConstraint(),
+]
+
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "WARNING").upper(),
+    format="%(asctime)s %(name)s %(levelname)s %(message)s",
+)
 
 app = Flask(__name__)
 
 ACOUSTICBRAINZ_BASE = "https://acousticbrainz.org/api/v1"
+STATIC_DIR = os.environ.get("STATIC_DIR", "")
 
 kb = MusicKnowledgeBase()
 
@@ -153,6 +169,7 @@ def playlist():
             knowledge_base=kb,
             search_space=search_space,
             beam_width=beam_width,
+            constraints=DEMO_CONSTRAINTS,
         )
 
         playlist = assembler.generate_playlist(
@@ -223,7 +240,11 @@ def playlist():
                 "transitions": transitions_data,
                 "summary": playlist.explanation.summary,
                 "constraints": [
-                    {"name": c.name, "satisfied": c.satisfied, "score": round(c.score, 3)}
+                    {
+                        "name": c.name,
+                        "satisfied": c.satisfied,
+                        "score": round(c.score, 3),
+                    }
                     for c in playlist.constraints_applied
                 ],
                 "quality": playlist.explanation.quality_metrics,
@@ -234,3 +255,21 @@ def playlist():
         return jsonify(
             {"error": f"Internal error during playlist generation: {e}"}
         ), 500
+
+
+@app.get("/")
+def index():
+    if STATIC_DIR and os.path.isdir(STATIC_DIR):
+        return send_from_directory(STATIC_DIR, "index.html")
+    print("STATIC_DIR", STATIC_DIR)
+    return jsonify({"service": "Wave Guide API"})
+
+
+@app.get("/<path:path>")
+def static_files(path: str):
+    if STATIC_DIR and os.path.isdir(STATIC_DIR):
+        full_path = os.path.join(STATIC_DIR, path)
+        if os.path.isfile(full_path):
+            return send_from_directory(STATIC_DIR, path)
+        return send_from_directory(STATIC_DIR, "index.html")
+    return jsonify({"error": "Not found"}), 404

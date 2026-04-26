@@ -16,3 +16,4 @@ build/
 *.egg-info/
 modules/*/models/
 !modules/*/models/.gitkeep
+.cache

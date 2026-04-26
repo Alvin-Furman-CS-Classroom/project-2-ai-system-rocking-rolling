@@ -226,7 +226,7 @@ class BeamSearch:
 
             # Check for meeting after forward expansion
             path = self._check_meeting(fwd_reached, bwd_reached, target_length)
-            if path is not None:
+            if path is not None and path.length >= target_length - 1:
                 return path
 
             # Expand backward beam one round
@@ -238,7 +238,7 @@ class BeamSearch:
 
             # Check for meeting after backward expansion
             path = self._check_meeting(fwd_reached, bwd_reached, target_length)
-            if path is not None:
+            if path is not None and path.length >= target_length - 1:
                 return path
 
         # Fallback to unidirectional
