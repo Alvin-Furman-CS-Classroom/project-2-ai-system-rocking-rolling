@@ -12,7 +12,7 @@ Key uses Pearson correlation on rotated Krumhansl-Kessler probe-tone profiles \c
 
 \subsection{Module 2: Path Finding and Data Integration}
 
-Module~2 takes a source MBID, destination MBID, target length, and beam width, and returns a \texttt{PlaylistPath} of waypoint MBIDs and accumulated cost. It runs bidirectional beam search with an A* heuristic: $f(n) = g(n) + h(n)$, where $g$ is accumulated cost and $h(n) = 1 - \text{compat}(n, \text{goal})$ from Module~1. Two frontiers expand from source and destination and terminate when they meet or the target length is reached; beam width $B = 10$ retains only the top $B$ states per round.
+Module~2 takes a source MBID, destination MBID, target length, and beam width, and returns a \texttt{PlaylistPath} of waypoint MBIDs and accumulated cost. It runs bidirectional beam search with an A*~\cite{hart1968} heuristic: $f(n) = g(n) + h(n)$, where $g$ is accumulated cost and $h(n) = 1 - \text{compat}(n, \text{goal})$ from Module~1. Two frontiers expand from source and destination and terminate when they meet or the target length is reached; beam width $B = 10$ retains only the top $B$ states per round.
 
 Neighbours come from four ListenBrainz similarity algorithms (two session-based with 9000- and 7500-day windows, two Top-N variants), merged for robustness. Module~2 ships four data clients: \texttt{MusicBrainzDB} (PostgreSQL with pooling and GIN indexes), a fallback REST client (1~req/sec), \texttt{AcousticBrainzClient}, and \texttt{ListenBrainzClient}.
 
