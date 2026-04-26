@@ -55,7 +55,7 @@ export function DemoPlaylist({ isActive, demoState }: DemoSlideProps) {
             gap: 6,
           }}
         >
-          {playlist.tracks.slice(0, 7).map((track, i) => (
+          {playlist.tracks.map((track, i) => (
             <TrackRow key={track.mbid} track={track} index={i} />
           ))}
         </div>
