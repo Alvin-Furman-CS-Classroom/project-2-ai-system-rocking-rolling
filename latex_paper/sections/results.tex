@@ -31,7 +31,7 @@ Relationship traversal sees the largest gain (2.74$\times$) because each REST ca
 
 \subsection{Constraints and Mood Classification}
 
-The min-conflicts solver achieves 100\% hard-constraint satisfaction on 50 test playlists (no repeated artists, no repeated tracks), reducing total soft-violation score by 67\% with a mean of 3.2 swap iterations to convergence. The mood classifier reached a maximum validation accuracy of 64.7\% across the six classes, with most residual confusion between perceptually adjacent moods (chill / calm). Per-model 5-fold cross-validation results are summarised in Table~\ref{tab:moodaccuracy}.
+The min-conflicts solver achieves 100\% hard-constraint satisfaction on 50 test playlists (no repeated artists, no repeated tracks), reducing total soft-violation score by 67\% with a mean of 3.2 swap iterations to convergence. The mood classifier reached a maximum single-split validation accuracy of 64.7\% across the six classes, with most residual confusion between perceptually adjacent moods (chill / calm). Per-model 5-fold cross-validation results are summarised in Table~\ref{tab:moodaccuracy}; the ensemble reaches 65\% mean CV accuracy.
 
 \begin{table}[h]
 \centering
