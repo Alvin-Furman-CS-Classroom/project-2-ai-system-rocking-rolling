@@ -5,7 +5,7 @@
 
 \subsection{Test Suite}
 
-The suite comprises 231 tests across 14 files. Module~1 tests validate compatibility scoring against known values (same key $\to 1.0$, relative major/minor $> 0.9$, tritone $< 0.5$). Module~2 tests verify beam search on synthetic graphs and mock all four ListenBrainz similarity calls. Module~3 tests cover all six constraints with edge cases. Module~4 tests verify classifier convergence and pickle round-trips. Mocking external APIs keeps the full suite under three seconds.
+The suite comprises 231 tests across 14 files. Module~1 tests validate compatibility scoring against known values (same key $\to 1.0$, relative major/minor $> 0.9$, tritone $< 0.5$). Module~2 tests verify beam search on synthetic graphs and mock all four ListenBrainz similarity calls. Module~3 tests cover all constraint classes with edge cases. Module~4 tests verify classifier convergence and pickle round-trips. Mocking external APIs keeps the full suite under three seconds.
 
 \subsection{Performance}
 \label{sec:results-perf}
