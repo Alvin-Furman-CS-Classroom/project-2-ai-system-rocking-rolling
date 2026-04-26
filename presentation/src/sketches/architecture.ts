@@ -206,7 +206,7 @@ export const architectureSketch: Sketch<Props> = (
       subW,
       subH,
       "Module 1: ProbLog KB",
-      "12-dim compatibility scoring",
+      "11-dim compatibility scoring",
       true,
     );
     drawBox(

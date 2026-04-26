@@ -54,7 +54,66 @@ The demoed flow walks the user through four picker stages---genres, artists, moo
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.85\textwidth]{web_interface.png}
-\caption{Wave Guide web interface generating a path from \emph{Girls Just Wanna Have Fun} to \emph{Comfortably Numb}, with per-transition compatibility from 71\% to 87\%.}
+\begin{tikzpicture}[
+    every node/.style={font=\footnotesize, align=center},
+    stage/.style={rectangle, draw, thick, fill=white, rounded corners=2pt,
+                  minimum width=2.4cm, minimum height=0.8cm},
+    stage-active/.style={rectangle, draw, very thick, fill=gray!22,
+                          rounded corners=2pt, minimum width=2.4cm, minimum height=0.8cm},
+    arr/.style={-{Stealth[length=1.6mm]}, thick, draw=black!70},
+    track/.style={rectangle, draw, thin, fill=white,
+                  minimum width=11cm, minimum height=0.55cm, anchor=west},
+    bar/.style={rectangle, draw=none, fill=black!75, minimum height=0.18cm, anchor=west}
+]
+
+% --- 4-stage picker flow (top) ---
+\node[stage]        (s1) at (-5.6, 3.3) {Genres};
+\node[stage]        (s2) at (-2.8, 3.3) {Artists};
+\node[stage]        (s3) at ( 0.0, 3.3) {Mood\\Journey};
+\node[stage-active] (s4) at ( 2.8, 3.3) {Anchor\\Tracks};
+\node[stage-active] (s5) at ( 5.6, 3.3) {Playlist};
+
+\draw[arr] (s1) -- (s2);
+\draw[arr] (s2) -- (s3);
+\draw[arr] (s3) -- (s4);
+\draw[arr] (s4) -- (s5);
+
+% --- Track list (bottom) ---
+\def\xL{-5.6}
+\def\xR{ 5.6}
+\def\rowH{0.65}
+
+% header
+\node[anchor=west] at (\xL, 1.9) {\scriptsize\textit{Source $\to$ Destination playlist (length 7, $\beta=10$)}};
+
+% rows: y, num, title, artist, pct
+\foreach \i/\y/\num/\title/\artist/\pct in {%
+  1/1.4/1/Girls Just Wanna Have Fun/Cyndi Lauper/87,
+  2/0.8/2/Walking on Sunshine/Katrina \& The Waves/82,
+  3/0.2/3/Don't Stop Me Now/Queen/76,
+  4/-0.4/4/Under Pressure/Queen \& Bowie/71,
+  5/-1.0/5/Comfortably Numb/Pink Floyd/} {
+    \draw[fill=gray!4, draw=black!20] (\xL, \y - 0.25) rectangle (\xR + 0.7, \y + 0.25);
+    \node[anchor=west, font=\bfseries\footnotesize] at (\xL + 0.1, \y) {\num};
+    \node[anchor=west, font=\footnotesize\bfseries] at (\xL + 0.7, \y) {\title};
+    \node[anchor=west, font=\footnotesize\itshape, text=black!55] at (\xL + 5.4, \y) {\artist};
+    \ifx\pct\empty
+      \node[anchor=east, font=\scriptsize, text=black!55] at (\xR + 0.7, \y) {DEST};
+    \else
+      \draw[fill=black!12, draw=black!30]
+        (\xR - 1.5, \y - 0.08) rectangle (\xR - 0.2, \y + 0.08);
+      \pgfmathsetmacro{\barLen}{(\pct/100)*1.3}
+      \draw[fill=black!75, draw=none]
+        (\xR - 1.5, \y - 0.08) rectangle (\xR - 1.5 + \barLen, \y + 0.08);
+      \node[anchor=west, font=\bfseries\footnotesize] at (\xR - 0.1, \y) {\pct\%};
+    \fi
+}
+
+% caption-style sublabel
+\node[anchor=west, font=\scriptsize\itshape, text=black!55] at (\xL, -1.7)
+  {Auto-generated journey summary: \emph{``A bright pop opener winding through Queen-era arena rock into a brooding Pink Floyd close.''}};
+
+\end{tikzpicture}
+\caption{Demo result page. Top: the four-stage user flow (genres $\to$ artists $\to$ mood journey $\to$ anchor tracks) culminates in a generated playlist. Bottom: the seven-track sequence with per-transition compatibility scores (71--87\% in this run). The journey summary, full per-transition explanations, and constraint scorecard are produced alongside.}
 \label{fig:webinterface}
 \end{figure}
