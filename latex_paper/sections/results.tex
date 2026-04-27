@@ -54,13 +54,13 @@ Ensemble & 0.65 & 0.62 \\
 
 \subsection{End-to-End Generation and Demo Experience}
 
+\begin{wrapfigure}{l}{0.55\textwidth}
+\centering
+\includegraphics[width=0.53\textwidth]{demo_screenshot}
+\caption{Demo result page. The playlist generator produces an 11-track sequence from \emph{Girls Just Want to Have Fun} (Cyndi Lauper) to \emph{Comfortably Numb} (Pink Floyd), with per-transition compatibility scores, component breakdowns, and an auto-generated journey summary alongside the constraint scorecard.}
+\label{fig:webinterface}
+\end{wrapfigure}
+
 The demoed flow has two steps. First, the user selects a source and destination track via a MusicBrainz canonical search field that resolves recording titles to MBIDs; then the user sets the desired playlist length and beam width before submitting. The request is posted to \texttt{/api/playlist} and the result page (Figure~\ref{fig:webinterface}) displays the full track list alongside a per-transition breakdown. In practice, playlist generation is severely throttled by the AcousticBrainz API: each candidate track requires a low-level and high-level feature fetch, and sustained requests trigger rate limiting that we were unable to overcome, pushing end-to-end generation time from the intended seconds into the range of minutes to hours.
 
 Figure~\ref{fig:webinterface} shows a representative run from \emph{Girls Just Want to Have Fun} (Cyndi Lauper) to \emph{Comfortably Numb} (Pink Floyd) (\texttt{length=12}, \texttt{beam\_width=10}). Beam search returned an 11-track path with mean compatibility 71\%; one key-compatibility violation was flagged at transition~6 (D~major $\to$ C~minor). Genre variety was the only failing constraint (80\%), as the path stays predominantly in classic rock.
-
-\begin{figure}[ht]
-\centering
-\includegraphics[width=0.5\textwidth]{demo_screenshot}
-\caption{Demo result page. The playlist generator produces an 11-track sequence from \emph{Girls Just Want to Have Fun} (Cyndi Lauper) to \emph{Comfortably Numb} (Pink Floyd), with per-transition compatibility scores, component breakdowns, and an auto-generated journey summary displayed alongside the constraint scorecard.}
-\label{fig:webinterface}
-\end{figure}
