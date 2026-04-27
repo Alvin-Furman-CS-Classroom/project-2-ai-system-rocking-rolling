@@ -2,7 +2,7 @@
 \section{Proposal Delta}
 % ============================================================
 
-The implementation diverged from the original proposal in seven concrete ways.
+The implementation diverged from the original proposal in six concrete ways.
 
 \paragraph{MusicBrainz data source.} The proposal assumed direct use of the public MusicBrainz REST API. The 1~req/sec rate limit proved prohibitive for multi-hop graph traversal, so we deployed a self-hosted Postgres mirror of the MusicBrainz database, which enables batch joins and yields a 2.74$\times$ speedup on relationship queries. The mirror also enabled a canonical song search API that the MusicBrainz REST API does not support: given a track title, the query returns the MBID of the most well-known release (ranked by release date and label prestige), improving the odds that downstream AcousticBrainz and ListenBrainz lookups succeed.
 
