@@ -1,0 +1,9 @@
+% ============================================================
+\section{Limitations and Failure Analysis}
+% ============================================================
+
+\paragraph{Data coverage} AcousticBrainz's 2022 archival leaves post-2022 releases and some older tracks without pre-computed features; $\sim$12\% of tracks need Essentia fallback. Tracks absent from ListenBrainz lack graph neighbors and stall beam search; hybrid graph/content-based search would mitigate this.
+
+\paragraph{Classification ceiling} The 64.7\% mood-classifier accuracy reflects confusion between semantically adjacent moods (chill / calm dominates the off-diagonal). The genre-derived taxonomy is an imperfect proxy for perceptual mood; human-annotated labels and richer features (rhythm complexity, vocal presence) would help.
+
+\paragraph{Failure modes} Playlists between maximally distant genres (e.g.\ Bach to death metal) produce technically valid but forced transitions; the search returns a path even when compatibility is low, and a quality threshold (``no coherent path found'') would be more honest. Near-duplicate tracks (original and remaster, different MBIDs) sometimes both appear; recording-group relationship checks would prevent this.

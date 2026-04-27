@@ -1,0 +1,108 @@
+"""CLI entry point for Module 3 playlist assembly.
+
+Usage:
+    uv run --package module3 python -m module3.main \
+        --source <MBID> --dest <MBID> --length 7 --beam-width 10
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+
+from module1 import MusicKnowledgeBase
+from module2 import SearchSpace
+
+from .essentia_client import EssentiaClient
+from .playlist_assembler import PlaylistAssembler
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Generate a playlist path between two tracks"
+    )
+    parser.add_argument("--source", required=True, help="Source track MBID")
+    parser.add_argument("--dest", required=True, help="Destination track MBID")
+    parser.add_argument("--length", type=int, default=7, help="Target playlist length")
+    parser.add_argument("--beam-width", type=int, default=10, help="Beam search width")
+    parser.add_argument("--json", action="store_true", help="Output as JSON")
+    parser.add_argument(
+        "--no-essentia", action="store_true", help="Disable Essentia fallback"
+    )
+    args = parser.parse_args()
+
+    kb = MusicKnowledgeBase()
+    search_space = SearchSpace(kb)
+
+    essentia = None
+    if not args.no_essentia:
+        essentia = EssentiaClient()
+        if not essentia.is_available:
+            print("Note: Essentia not installed — audio analysis fallback disabled")
+            essentia = None
+
+    assembler = PlaylistAssembler(
+        knowledge_base=kb,
+        search_space=search_space,
+        essentia_client=essentia,
+        beam_width=args.beam_width,
+    )
+
+    print(f"Finding playlist path: {args.source} → {args.dest}")
+    print(f"Target length: {args.length}, beam width: {args.beam_width}")
+    print()
+
+    playlist = assembler.generate_playlist(
+        args.source, args.dest, target_length=args.length
+    )
+
+    if playlist is None:
+        print("No path found. The tracks may not have sufficient data coverage.")
+        sys.exit(1)
+    assert playlist is not None
+
+    if args.json:
+        print(json.dumps(playlist.to_static_output(), indent=2))
+        return
+
+    # Pretty-print output
+    print(f"=== Playlist ({playlist.length} tracks) ===")
+    print(f"Summary: {playlist.explanation.summary}")
+    print()
+
+    for te in playlist.explanation.track_explanations:
+        role_tag = f" [{te.role}]" if te.role != "waypoint" else ""
+        print(
+            f"  {te.position + 1}. {te.title or te.mbid} — {te.artist or 'Unknown'}{role_tag}"
+        )
+
+        if te.incoming_transition:
+            it = te.incoming_transition
+            print(f"     ↑ compatibility: {it.overall_score:.0%}")
+            for dim, score, desc in it.top_contributors:
+                print(f"       • {desc}")
+
+    print()
+
+    # Quality metrics
+    qm = playlist.explanation.quality_metrics
+    print(
+        f"Quality: avg={qm.get('avg_compatibility', 0):.0%}, "
+        f"weakest={qm.get('weakest_transition', 0):.0%}, "
+        f"strongest={qm.get('strongest_transition', 0):.0%}"
+    )
+
+    # Constraint results
+    if playlist.constraints_applied:
+        print()
+        print("Constraints:")
+        for cr in playlist.constraints_applied:
+            status = "✓" if cr.satisfied else "✗"
+            print(f"  {status} {cr.name} (score: {cr.score:.0%})")
+            for v in cr.violations:
+                print(f"    - {v}")
+
+
+if __name__ == "__main__":
+    main()

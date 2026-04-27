@@ -1,0 +1,13 @@
+% ============================================================
+\section{Conclusions and Future Work}
+\label{sec:future}
+% ============================================================
+
+Wave Guide shows that systematic, explainable playlist generation is achievable on open-source infrastructure. The system encodes 11 compatibility dimensions grounded in music cognition research, navigates the ListenBrainz similarity graph via bidirectional beam search, satisfies hard and soft constraints through local search, and explains every decision at three levels. Key lessons: multi-dimensional similarity is essential for natural transitions, explainability builds user trust, fallback mechanisms are critical for data gaps, and self-hosting Postgres pays off despite setup cost.
+
+\paragraph{Near-term work} Two items planned but not merged by submission are top priority. First, wiring mood-based input directly into the search algorithm: Module~4 exposes mood centroids and the UI already filters by mood, but the search still anchors on MBIDs; a prototype exists on a feature branch. Second, log-normalizing energy band values against empirical AcousticBrainz ranges to improve score stability across genres.
+
+\paragraph{Longer-term} Batch Essentia extraction for popular tracks reduces the 5--10~s fallback latency. Human-annotated mood labels would raise the 64.7\% classifier ceiling. Hybrid graph/content-based search mitigates cold-start for tracks absent from the ListenBrainz graph. LLM-enhanced explanations would replace template prose. Cross-modal queries (text, hummed melodies), skip-aware real-time adaptation, and collaborative multi-user playlists are natural extensions of the current architecture.
+
+\vspace{1em}
+\noindent\textbf{Repository:} \url{https://github.com/Alvin-Furman-CS-Classroom/project-2-ai-system-rocking-rolling}

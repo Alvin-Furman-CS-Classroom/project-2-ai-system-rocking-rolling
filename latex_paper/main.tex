@@ -1,0 +1,56 @@
+\documentclass[conference,onecolumn,12pt]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, fit, backgrounds, calc}
+
+% Figure path
+\graphicspath{{figures/}}
+
+% Code listing style
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!10}
+}
+
+\title{Wave Guide: An Explainable Music Playlist Generation System Using Multi-Dimensional Compatibility Scoring and Constraint Satisfaction}
+
+\author{
+    \IEEEauthorblockN{Rahul Ranjan Sah}
+    \IEEEauthorblockA{Furman University\\
+    sahra1@furman.edu}
+    \and
+    \IEEEauthorblockN{Michael Thomas}
+    \IEEEauthorblockA{Furman University\\
+    thommi2@furman.edu}
+}
+
+\begin{document}
+
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/architecture}
+\input{sections/modules}
+\input{sections/evaluation}
+\input{sections/results}
+\input{sections/delta}
+\input{sections/limitations}
+\input{sections/contributions}
+\input{sections/conclusion}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

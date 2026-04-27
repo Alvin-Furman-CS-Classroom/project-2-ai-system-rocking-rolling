@@ -1,0 +1,398 @@
+{
+  "rock": {
+    "The Beatles": [
+      "0cdc9b5b-b16b-4ff1-9f16-5b4ba76f1c17",
+      "485bbe7f-d0f7-4ffe-8adb-0f1093dd2dbf",
+      "440f60e8-0b25-4ec4-abb1-c6beec624ab0",
+      "b849acd4-0638-49ea-8e40-7391613d4890",
+      "424c10aa-a857-4dc6-872e-2a8fb0b707f3",
+      "2bc34fa0-e20f-4a1a-8a00-c7c672c40a6e"
+    ],
+    "Led Zeppelin": [
+      "ccfdd180-22e1-49b9-bd81-b5fcf2c6474e",
+      "2cfad207-3f55-4aec-8120-86cf66e34d59",
+      "9d9c8206-8b4c-45fc-8f12-ffc1940b2b7f",
+      "f8f0e1c4-310b-4107-bed2-f4394d37b033",
+      "dd2e50c0-e6e5-4566-a47b-daf32cc8c18b",
+      "7c5a7d3b-fcc0-4c88-8798-5f34fe2be0f3",
+      "553510ce-68dd-4e85-9e8c-eafb23d43bab",
+      "9c08d02d-5e49-4ef9-b538-dce167adc54a",
+      "d9c83399-5c8a-4c66-804b-95ad757c8f1b",
+      "1a10c3d7-438e-4f6c-b10f-b02c4e9bad6e"
+    ],
+    "The Rolling Stones": [
+      "c6ddba3b-a1a4-40a5-b686-b040ba536f24",
+      "6e1930ed-5be2-499e-9a6f-9202202f18a3",
+      "5f4f78e0-148f-43e6-9e3a-f0af43312efe",
+      "57888c47-f976-4417-9577-f45f118b58ca",
+      "9d8c543c-8dee-4aca-867e-909b496ca875",
+      "51d64ed0-0dd0-471d-9b07-786d715a17da",
+      "0fded65a-60dc-4ebd-9587-639c921176fb",
+      "8d2338a2-4acc-4d99-b2a7-1151f428cab6",
+      "1674d24d-8b74-4e65-94e5-e38527f593a9"
+    ],
+    "Pink Floyd": [
+      "d3528f95-1a3f-45d2-a569-826740c0adee",
+      "0e11c0fd-a1da-4b88-a438-7ef55c5809ec",
+      "7fef22bd-76aa-4803-b56b-93a5d6e70662",
+      "73b01cea-2dad-4fc2-9e61-02a31477c1b1",
+      "2d1201cf-59bb-4ffa-9f52-f5b3afa13346",
+      "71c0e054-b700-4fd2-a35b-95c7afc566cb",
+      "19084069-642f-465f-9127-f71bcd800a05"
+    ],
+    "Queen": [
+      "b1a9c0e9-d987-4042-ae91-78d6a3267d69",
+      "d4009c09-a339-4b89-bc45-d91ab649acb6",
+      "6b235773-16bd-4fc5-b57e-c966f9d1db6d",
+      "7b3d96c9-3e22-4337-be32-f8a26b816685",
+      "f8581c2b-61ac-465d-82ae-0fa2916a4799",
+      "e4678e4a-3cb1-497b-9b66-a0c1fec1a85e",
+      "fd125370-5ac9-45eb-86ad-ab99e258404b",
+      "4699d5a2-ac71-4189-b797-c86114eac4a1"
+    ],
+    "David Bowie": [
+      "4ce20795-0558-4302-943a-7f621f49aad6",
+      "11bd860a-4447-4140-813d-64834ae02ca8",
+      "c7ffdbaf-cda4-41a6-a175-b289f3e8596a"
+    ],
+    "The Who": [
+      "9ce06d95-8de5-4560-b280-9aa5387d100a",
+      "295291be-e403-47fd-b7ab-ae65ad60a275",
+      "adc0fc73-379f-4654-93f5-6c4e19371069"
+    ],
+    "Bruce Springsteen": [
+      "f2f99a81-9375-4557-8138-2a0a297f5c85"
+    ],
+    "Nirvana": [
+      "3fac712c-4196-4865-8c1a-94231a7da309"
+    ]
+  },
+  "pop": {
+    "Michael Jackson": [
+      "f980fc14-e29b-481d-ad3a-5ed9b4ab6340",
+      "de798de6-70fc-49f6-b580-339cd2e62052",
+      "8403caf8-3714-46da-934c-1fe91a049540",
+      "774e840c-164b-434c-8f2e-359eab5b050d",
+      "43a8d041-d666-4b14-807a-5ac0df35a69a",
+      "47eaab1a-667b-490d-8094-168e7d0d9ad1",
+      "9cec664e-bfad-49b6-9945-2a9e6ccb51c0",
+      "2d141cbd-8219-4b90-b2bb-ab74fa7c65b9",
+      "40a43f5e-d4f4-4253-a42d-364d47208c64"
+    ],
+    "Madonna": [
+      "d63f9a2c-aea5-4b77-875e-eee7ce1fd734",
+      "bfbe89a4-5178-4f12-b258-2d8718881094",
+      "bcde755b-0d7d-4d6e-a20e-1364b2800ebd",
+      "a54de956-3d99-4a91-be34-96a75a8b64b3"
+    ],
+    "Prince": [
+      "285b93b7-6021-4d06-a9de-718d29d727e4"
+    ],
+    "Elton John": [
+      "60572fab-c835-4733-aa5a-2864c318c9c8",
+      "d63bf39f-ec30-4f9f-b5a1-1397756016a3",
+      "4c2a08bd-26df-4e68-835a-5bc8ff9bcf8a",
+      "e492bc5b-469e-497b-903d-64a9713deee0",
+      "50d83ff0-6ffd-4a92-b353-c104bbb45b9e",
+      "a57af2bd-9226-468e-8d86-1b2265fc4ef1",
+      "8388fed5-e41f-44d1-b6b5-a5b04ffffbd5",
+      "d373ce6a-d746-4516-9950-7ed3835982f1",
+      "6ee36260-342c-46fe-b430-b03f2dced51c"
+    ],
+    "Whitney Houston": [
+      "55b77af9-6ae1-448c-abee-f5d3739d22cd",
+      "6f3ef133-3368-4797-b0f6-6fd66b55c548",
+      "9f0682aa-7525-4e8c-9208-654e036a1b6e",
+      "afaf6df8-cf3c-4bdd-8ec0-6f6e866c4ca6",
+      "34e26994-05e1-4efd-9439-1d62c71e192e"
+    ],
+    "Mariah Carey": [
+      "a6fab057-cf3a-4456-950e-d3edaf219326",
+      "04ca399c-7529-4276-ae8c-4329911d6aaa"
+    ],
+    "Stevie Wonder": [
+      "05b6bdda-3219-4756-af17-d0d9cdcdb104",
+      "dc66e35d-cfff-465b-bde6-22585324d3cc",
+      "34c7b483-7ac5-4528-9561-76bb1d8d965d"
+    ],
+    "ABBA": [
+      "bfdcfb41-167c-4f5b-b163-bde83bbf69ac"
+    ]
+  },
+  "electronic": {
+    "Daft Punk": [
+      "f1a6a40f-78f5-4918-968d-f64363bae94c",
+      "15f16efc-8762-4151-95ab-c12d06268640",
+      "7c0e11a3-1c7a-4e6d-a14d-6e86d86dbaad",
+      "defbfcb2-7a5c-4456-be28-b7e5ccf92cc2",
+      "60fa767a-d85d-4991-82bc-4294e0b11ae7",
+      "7813d6e5-fe21-4cd0-8f8b-82b7c15662ae",
+      "66f340f5-ccaa-4b63-a6ec-dcf67c6982df",
+      "48d9340a-0c6a-469a-b043-eeaec9f577c6",
+      "59038571-03ea-4ca4-965c-a57eae2aa138",
+      "d63ad586-1124-4df1-9a2b-c014d7b7cb02"
+    ],
+    "Kraftwerk": [
+      "6f78de43-5c10-4a81-8095-cb0e70e45ca6",
+      "c3425799-284e-454a-a006-873c953f1cad",
+      "1fcc329c-a3c1-486e-8345-565e7f261ab7",
+      "c703433d-38f9-45d3-8e46-1673c4e71bbd",
+      "43be5ecb-16bf-4cb8-8ceb-37403e688e09",
+      "867cf1a1-c46a-4ad5-916f-0c5397ff65e5",
+      "934c2b4b-8767-489c-a2b6-2d8e5daa853c",
+      "356eb8a5-67bc-40d6-85f0-ae9e19971a11",
+      "bb6f31be-97fa-4933-be77-c64800f37f60",
+      "4cf9bf33-f088-466d-926b-a9a08477d3ae"
+    ],
+    "The Chemical Brothers": [
+      "bf7845cc-eac3-48a3-8b06-543b4b7ba117",
+      "93411521-d7b4-4c87-9bce-a4ba5e6b95fa",
+      "bac8e50d-d899-4518-9268-b2a8b384eb92",
+      "6abc5eed-68a4-4ea3-a092-374772b8f09d"
+    ],
+    "Aphex Twin": [
+      "856d081d-320b-4b6b-8dac-4427e308296d",
+      "3038681f-15e7-4268-948f-e290540a4393",
+      "12db16d7-6541-4a3e-9fc1-fa1f27501bbb"
+    ],
+    "deadmau5": [
+      "3eb778a9-911a-488b-bfd3-4f318b88dc17",
+      "096efdef-4dcb-4b26-9c22-819943eea715"
+    ],
+    "Boards of Canada": [
+      "ef756a43-0905-4e59-8f05-a6b2bd977aa8",
+      "a4ec6700-5ddb-4d4f-98b0-f82a480c50e0",
+      "b061ba14-6b3b-4739-a043-dd4685357af4",
+      "93fa1eb2-dd7c-4e0e-8174-360d32176586",
+      "f0a4be92-bf11-43e3-90eb-6a47e9bcba0c"
+    ],
+    "Fatboy Slim": [
+      "66197b08-aa26-4f44-91da-49a8c89168ae",
+      "31a0eae0-8af8-4512-9f0f-4d1bf35f2c14"
+    ],
+    "Jean‐Michel Jarre": [
+      "c4cb92fa-353b-42ae-8e41-cb072f59a859"
+    ],
+    "Jean Michel Jarre": [
+      "df97f5b4-1a5f-4bea-aac9-6fd0f8c8892e"
+    ]
+  },
+  "jazz": {
+    "Miles Davis": [
+      "60f750f4-d222-46b7-ad5c-905334c9a48a",
+      "67a9794c-153a-4a24-82ec-9eace7e208f2",
+      "b7ebe185-21e9-4400-a17a-3d0cee232925",
+      "250b3f1d-7620-42a9-87b3-5d1a166e0f2f",
+      "bc80349a-c5d6-4d35-8d29-87d5b10e5d5d",
+      "e256e93a-6f03-41ce-ae88-18c027609c54",
+      "09448c9d-36f3-4eb0-8730-8b1b3aea5608",
+      "8b349e4f-dc7a-4eb0-84b9-924554dea663",
+      "c7b1218a-30f7-42e8-8ab6-2601227e635b"
+    ],
+    "Miles Davis Quintet": [
+      "852bf62a-29f9-4026-abc5-86d6e973196f"
+    ],
+    "John Coltrane": [
+      "a4b7eed8-56bc-48c5-82a8-89fcfcfad376",
+      "6b2408c4-ced6-4c72-ba51-2d02f014f60a",
+      "769b8430-fa92-4f0b-91df-55266dcfc9da",
+      "6dc63505-78a7-4cd7-a59d-f26bbe2cf62d",
+      "ca9af83b-ebe2-4e81-88d9-21a7ffe94bde"
+    ],
+    "Duke Ellington & John Coltrane": [
+      "d95677bb-60c5-4671-9f50-f9c7494ccaf6"
+    ],
+    "Louis Armstrong": [
+      "57cbf3ce-2bbe-4b56-905d-aeb5caa43c2e",
+      "6016b94c-e75e-4496-be98-3f276965fa1e",
+      "5b2930ac-9d29-405b-8631-dcdc0ec09dc9",
+      "56442481-6d86-40fb-aad8-a4e56ce73730"
+    ],
+    "Ella Fitzgerald – Louis Armstrong with Sy Oliver and His Orchestra": [
+      "67cd8784-53f1-42ec-93e4-e67e6e081c02"
+    ],
+    "Ella Fitzgerald & Louis Armstrong": [
+      "9c09a3a8-9ae9-4370-98c7-1c5ad5416d28"
+    ],
+    "Duke Ellington": [
+      "b3a667b1-959c-432e-b3f2-d1320a244bf3",
+      "8223b096-a9fd-41fa-8d79-a240bc4b0d9a",
+      "86416a2f-03cb-4eb7-8890-9a588e000412"
+    ],
+    "Charlie Parker": [
+      "472cd0d4-889d-4fbe-a486-6610a9027647",
+      "c7de9769-6a56-44cd-8fba-cb52427d160e",
+      "774b8c39-4a67-4d02-80b5-f9bf0464d869",
+      "d4f3b879-c06f-418a-b945-0140348cac3d"
+    ],
+    "Thelonious Monk": [
+      "5f729196-cd24-4b30-9463-b2135a029b59"
+    ],
+    "Herbie Hancock": [
+      "9af67d83-b3ef-44da-95a2-e695dcce2772"
+    ],
+    "Dave Brubeck": [
+      "25678c1b-848a-4f67-9be4-476d72380577"
+    ]
+  },
+  "folk": {
+    "Bob Dylan": [
+      "26244520-0e1d-4d42-b101-ce6b83299d33",
+      "00e37446-2e4c-409a-a8a1-ed94f1b01a57",
+      "81ee2fd6-58a3-41de-b299-fe96dae9fde3",
+      "a789abbf-fefe-4a7d-9d45-3efbfd389c88",
+      "9e5680b3-1a52-4910-9a47-f04f46545b98",
+      "19f571b4-b396-4113-9858-ab032074a3c7",
+      "123b0bb8-c351-4608-999e-d847f3c0b359",
+      "0d24a997-5cf8-4629-8900-db1feda33ece",
+      "bb79ce9e-f3d5-4f84-b1a2-130f414f8034"
+    ],
+    "Johnny Cash": [
+      "25d8de5e-3662-4ffd-8dea-511a696ac3e7",
+      "678faf1f-4789-4aa2-b84e-942b3dacff19",
+      "c8e939fe-7302-4ca4-a514-421550460bea",
+      "a7fe4f29-d82d-4f75-a97a-e48093307187",
+      "51df354e-095d-46bd-afd7-afbfc27996c5",
+      "3c28eb47-edbe-49fe-ae24-7102dbda9b96",
+      "44143400-a9cf-4384-801b-16fbcac97f10",
+      "d5812af3-7d52-46da-80c0-01d48c5cb9f5",
+      "43b13bee-bb41-4e28-95ff-57de098a6144"
+    ],
+    "Johnny Cash and The Tennessee Two": [
+      "b9e8436a-ef5d-4949-af67-f95ce1667f50"
+    ],
+    "Dolly Parton": [
+      "c546d32b-03d9-4cc9-b7a0-bd039404d669",
+      "f989fa05-7e2b-4e88-8a95-b5d68480b539",
+      "92f2ba50-8045-4fa9-a4a4-2235d8fca21e",
+      "20c4f66e-8f70-4d92-8c5c-d349b96cabf9",
+      "fa88742a-8af0-4057-a993-2959261bacfc",
+      "39ee5a8a-f2a7-4169-97b2-0b9cf1c157da",
+      "69aeba90-99e1-43ae-aa74-23a4b728f67a"
+    ],
+    "Dolly Parton with Kenny Rogers": [
+      "f2ebb156-0647-4340-949a-ff57aadbb300"
+    ],
+    "Willie Nelson": [
+      "1e0ff41e-80bc-4812-a57c-1735bf814d57",
+      "19d0be93-fdbc-4510-8a5e-c849967a927f"
+    ],
+    "Toby Keith feat. Willie Nelson": [
+      "9216f8e8-5234-4219-a37f-0c68a92cd6f5"
+    ],
+    "Hank Williams with His Drifting Cowboys": [
+      "414f598f-5d00-46a9-803f-351a8cf7ef83"
+    ],
+    "Joni Mitchell": [
+      "f085a8df-24f6-4120-852a-5ad0d6ddb80d",
+      "d84a716c-1377-46a3-b2dc-5a8268e9ed00"
+    ],
+    "Joan Baez": [
+      "c7602695-a3b1-4003-83e8-6f8b4f47f206",
+      "e66526df-8d67-448e-8d4b-28baac82d71f"
+    ],
+    "Mark Knopfler and Emmylou Harris": [
+      "42ab93e4-4a7a-4f3c-b523-3d210cc2dac8"
+    ],
+    "Gordon Lightfoot": [
+      "76057c9d-8963-4773-88ae-7d99eb6a0594"
+    ]
+  },
+  "classical": {
+    "Richard Clayderman": [
+      "f6450706-07fb-45aa-9d74-e16f6830f9c6"
+    ],
+    "[unknown]": [
+      "7e29580d-e3cc-4b1a-a8c1-88c1b7aa1e10",
+      "2494777e-552b-4d91-884e-96a79fe767e0",
+      "5cd7b111-b6f7-482c-acd1-94f986819fa9",
+      "69dc667f-5998-43ed-a021-91179c4bf19a",
+      "a2cec1ec-e91b-4c53-b38e-b67957b1fc4a",
+      "3eae38c4-9d5a-41d9-9e54-9b41a2ab6047"
+    ],
+    "Berliner Symphoniker, London Philharmonic Orchestra, London Philharmonic Orchestra, London Symphony Orchestra, Simfonični orkester RTV Slovenija, Alberto Lizzio, Anton Nanut, Alfred Scholz, Peter Wohlert": [
+      "037686c6-8d0a-49c5-acb7-4167a781db74"
+    ],
+    "James Last Orchestra, James Last": [
+      "fb0f56c0-5d18-4cd4-bb1a-1bdd79a0f353"
+    ],
+    "Aubrey Hilliard": [
+      "233df6ee-e473-476c-820a-728a4a6a9bd8"
+    ],
+    "The Baby Einstein Music Box Orchestra": [
+      "6cc8a84d-79f0-47ac-b1a1-40c9d35f2918",
+      "9f7e9ba9-9c3d-4c14-ab9f-6a96d937b184"
+    ],
+    "Robert Aldwinckle": [
+      "ab48743d-6e1b-40e6-9306-87bb61a2e7fe"
+    ],
+    "Bath Festival Orchestra, Yehudi Menuhin": [
+      "3a50d899-04f5-4885-aa48-1f876dbc42bf"
+    ],
+    "Glenn Gould": [
+      "4b17bf4b-26b0-478e-95ed-cfc1db4ea13f"
+    ],
+    "Jeffrey Kahane, Joseph Swensen": [
+      "d118883c-e1b6-4da1-a5c9-172476e35642"
+    ],
+    "Claude Debussy": [
+      "847fee4b-2576-4a08-be95-5f9217b04fe4"
+    ],
+    "Antonio Vivaldi": [
+      "4929271a-117b-493a-b99e-0e413afb7579"
+    ],
+    "Georg Friedrich Händel": [
+      "c133a320-ac69-47ac-8378-fe0d2778991b"
+    ]
+  },
+  "hip-hop": {
+    "Tupac Shakur": [
+      "04da1e63-c3e4-4c41-8830-91af224bcb0a"
+    ],
+    "The Notorious B.I.G.": [
+      "181c0a32-6e3f-4680-8a7d-1daf0b42e43b",
+      "8154704f-cedf-4b1e-95b1-5ad7b5a24052",
+      "2c1d093a-ad4e-4f96-b27c-15a63210ec6f",
+      "ed4a3111-b4b7-45ed-8f11-d69a461a0f8e",
+      "c08b8fd6-9149-48fd-a64d-0e24aba959ff",
+      "64b25c2b-005b-463f-87ad-d20d78ba1d83",
+      "42fd64d1-ce8a-4d3e-8af2-ce646f05a678",
+      "126f140b-5392-44f1-ba84-e3a963d0e132",
+      "0bc9a2bc-8375-4ab9-8da8-6b1dc095e5db",
+      "ad93b7ff-25c2-48bd-8535-50c3f1ca3773"
+    ],
+    "Jay‐Z": [
+      "9d8d5c34-308a-4432-8ddd-9bd3d2444b94",
+      "9d4c57fe-ba72-40d5-8bf0-c9c85825bee0",
+      "64ea3615-a07e-42f6-9ecd-fa6ec6d014b4",
+      "46c30cd1-0175-43b0-9e6d-d16e0a3df49e",
+      "77349c88-a20f-479e-ba3d-7be0c6af0290"
+    ],
+    "Rihanna feat. JAY‐Z": [
+      "0b4b1b0c-e057-4d8d-9a47-12a97ff6fb3d"
+    ],
+    "Beyoncé feat. Jay-Z": [
+      "ce547594-5199-49a2-9cb7-ff39e64a469f"
+    ],
+    "Eminem": [
+      "7b898b31-3bf6-4048-a690-f33ba0cdb324",
+      "ce1c8d0c-5a66-4fe3-acab-db1967b1f9bc"
+    ],
+    "Kendrick Lamar": [
+      "5fb18e9d-fb24-4d96-8410-032d3fc89568",
+      "e93ffc87-5306-4975-8d7a-298914cb96b9",
+      "5339459c-d3b2-44c8-bf30-11feb9d2db87",
+      "cdffc58c-5b84-4d70-bf52-5179919d55b1"
+    ],
+    "Rakim": [
+      "4a33c1ee-3f1a-4467-a908-a46fac46671b"
+    ],
+    "Run‐D.M.C.": [
+      "5332959d-2780-4d56-a5cf-be0a1b44eaa9"
+    ],
+    "Dr. Dre": [
+      "2b5d868a-bb49-4f1c-baca-59cb0ddb6a52",
+      "938cc121-99c3-4453-af04-c85487dd045c"
+    ]
+  }
+}

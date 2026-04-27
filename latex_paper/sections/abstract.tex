@@ -1,0 +1,7 @@
+% ============================================================
+\begin{abstract}
+% ============================================================
+
+Spotify's 2024 restriction of its recommendation API removed the dominant programmatic approach to playlist curation, motivating the development of open alternatives. We present Wave Guide, an open-source playlist generation system that frames track sequencing as a path-finding problem through multi-dimensional audio feature space. The system integrates four AI techniques: a probabilistic logic knowledge base encoding music theory constraints (Krumhansl-Kessler key profiles, circle-of-fifths relationships), bidirectional beam search over the ListenBrainz similarity graph with A*-style heuristics, constraint satisfaction with min-conflicts local search for playlist coherence, and supervised mood classification trained for future natural-language queries. Drawing entirely from open-source data---MusicBrainz (38M recordings), AcousticBrainz (71-dimensional audio features), and ListenBrainz (collaborative similarity)---the system scores track transitions across 11 compatibility dimensions: key, tempo, timbre, energy, mood, genre, artist relationships, and era proximity. A three-level explanation system generates human-readable justifications for every track selection. Wave Guide establishes that systematic, explainable music discovery emerges from combining domain knowledge with careful software architecture, independent of proprietary services.
+
+\end{abstract}

@@ -1,0 +1,66 @@
+% ============================================================
+\section{Results}
+\label{sec:results}
+% ============================================================
+
+\subsection{Test Suite}
+
+The suite comprises 247 tests across 14 files. Module~1 tests validate compatibility scoring against known values (same key $\to 1.0$, relative major/minor $> 0.9$, tritone $< 0.5$). Module~2 tests verify beam search on synthetic graphs and mock all four ListenBrainz similarity calls. Module~3 tests cover all constraint classes with edge cases. Module~4 tests verify classifier convergence and pickle round-trips. Mocking external APIs keeps the full suite under three seconds.
+
+\subsection{Performance}
+\label{sec:results-perf}
+
+Table~\ref{tab:benchmark} compares the Postgres mirror to the public MusicBrainz REST API.
+
+\begin{table}[h]
+\centering
+\caption{Postgres mirror vs.\ public MusicBrainz REST API (mean of 3 runs).}
+\label{tab:benchmark}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Operation} & \textbf{API (s)} & \textbf{Postgres (s)} & \textbf{Speedup} \\
+\midrule
+25 single lookups & 43.5 & 24.9 & 1.75$\times$ \\
+25-MBID batch & 1.16 & 0.93 & 1.25$\times$ \\
+5 artist-relationship queries & 6.3 & 2.3 & 2.74$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Relationship traversal sees the largest gain (2.74$\times$) because each REST call only returns one neighbourhood, so multi-hop traversal becomes a chain of round-trips, whereas the Postgres mirror executes the same traversal as a single recursive query. Typical end-to-end playlist generation runs roughly 2$\times$ faster on the mirror.
+
+\subsection{Constraint Satisfaction}
+
+The min-conflicts solver achieves 100\% hard-constraint satisfaction on 50 test playlists (no repeated artists, no repeated tracks), reducing total soft-violation score by 67\% with a mean of 3.2 swap iterations to convergence.
+
+\subsection{Mood Classification}
+
+The mood classifier reached a maximum single-split validation accuracy of 64.7\% across the six classes, with most residual confusion between perceptually adjacent moods (chill / calm). Per-model 5-fold cross-validation results are summarised in Table~\ref{tab:moodaccuracy}; the ensemble reaches 65\% mean CV accuracy.
+
+\begin{table}[h]
+\centering
+\caption{Mood classifier 5-fold cross-validation.}
+\label{tab:moodaccuracy}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Model} & \textbf{Accuracy} & \textbf{Macro F1} \\
+\midrule
+Logistic Regression & 0.59 & 0.55 \\
+MLP ($256 \to 128$) & 0.63 & 0.60 \\
+Ensemble & 0.65 & 0.62 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{End-to-End Generation and Demo Experience}
+
+\begin{wrapfigure}{l}{0.55\textwidth}
+\centering
+\includegraphics[width=0.53\textwidth]{demo_screenshot}
+\caption{Demo result page. The playlist generator produces an 11-track sequence from \emph{Girls Just Want to Have Fun} (Cyndi Lauper) to \emph{Comfortably Numb} (Pink Floyd), with per-transition compatibility scores, component breakdowns, and an auto-generated journey summary alongside the constraint scorecard.}
+\label{fig:webinterface}
+\end{wrapfigure}
+
+The demoed flow has two steps. First, the user selects a source and destination track via a MusicBrainz canonical search field that resolves recording titles to MBIDs; then the user sets the desired playlist length and beam width before submitting. The request is posted to \texttt{/api/playlist} and the result page (Figure~\ref{fig:webinterface}) displays the full track list alongside a per-transition breakdown. In practice, playlist generation is severely throttled by the AcousticBrainz API: each candidate track requires a low-level and high-level feature fetch, and sustained requests trigger rate limiting that we were unable to overcome, pushing end-to-end generation time from the intended seconds into the range of minutes to hours.
+
+Figure~\ref{fig:webinterface} shows a representative run from \emph{Girls Just Want to Have Fun} (Cyndi Lauper) to \emph{Comfortably Numb} (Pink Floyd) (\texttt{length=12}, \texttt{beam\_width=10}). Beam search returned an 11-track path with mean compatibility 71\%; one key-compatibility violation was flagged at transition~6 (D~major $\to$ C~minor). Genre variety was the only failing constraint (80\%), as the path stays predominantly in classic rock.

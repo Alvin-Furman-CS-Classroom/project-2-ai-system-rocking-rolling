@@ -1,0 +1,18 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import tailwindcss from "@tailwindcss/vite";
+
+// https://vite.dev/config/
+export default defineConfig({
+	plugins: [react(), tailwindcss()],
+	server: {
+		proxy: {
+			"/api": "http://127.0.0.1:5000",
+			"/song-api": {
+				target: "https://metabrainz.thomasfmly.org",
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/song-api/, ""),
+			},
+		},
+	},
+});

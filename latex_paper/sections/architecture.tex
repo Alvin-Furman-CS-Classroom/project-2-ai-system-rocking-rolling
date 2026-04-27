@@ -1,0 +1,57 @@
+% ============================================================
+\section{System Architecture}
+% ============================================================
+
+Wave Guide organises four modules behind a Flask REST API and a React frontend (Figure~\ref{fig:architecture}). The frontend issues two kinds of request to the API: \texttt{/api/playlist} for end-to-end generation between two MBIDs, and Module~4 mood predictions to filter the track-picker pool by mood. \texttt{/api/playlist} resolves the source and destination AcousticBrainz features and hands control to Module~3 \\(\texttt{PlaylistAssembler}), the orchestrator. Module~3 drives Module~2's bidirectional beam search and uses Module~1 to score each candidate edge. When the search terminates, Module~3 applies constraint satisfaction (hard: unique artists and tracks; soft: genre variety, tempo smoothness) and emits a three-level explanation. Self-hosting the MusicBrainz Postgres mirror was essential---the public REST API's 1~req/sec limit produced unacceptable interactive latency---and yields a 2$\times$ speedup (Section~\ref{sec:results-perf}). Module~4 supplies mood-filtered shortlists to the picker so users select MBIDs from mood-coherent candidates; the search itself still anchors on MBIDs, with centroid-based search seeding deferred to future work.
+
+The system reads from three open data sources: a self-hosted MusicBrainz~\cite{musicbrainz2024} Postgres mirror (38M recordings, metadata and artist relations), the archived AcousticBrainz~\cite{acousticbrainz2022} REST API ($\sim$2M tracks, 71-dim audio features), and the live ListenBrainz~\cite{listenbrainz2024} REST API (similarity neighbourhoods and user tags). The backend runs on Python 3.13 in a \texttt{uv} workspace; key dependencies are Flask, psycopg (with pooling), ProbLog \cite{deraedt2007}, scikit-learn \cite{scikit2011}, Essentia \cite{bogdanov2013}, and yt-dlp~\cite{ytdlp2024}. The frontend uses React 18 with TypeScript and Vite.
+
+% System Architecture — matches the diagram from the live demo
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[
+    every node/.style={font=\footnotesize, align=center},
+    layer/.style={rectangle, draw, thick, fill=white,
+                  minimum width=5.4cm, minimum height=1.0cm, rounded corners=2pt},
+    orch/.style={rectangle, draw, very thick, fill=gray!22,
+                 minimum width=5cm, minimum height=1.1cm, rounded corners=2pt},
+    module/.style={rectangle, draw, thick, fill=gray!10,
+                   minimum width=3.8cm, minimum height=1.1cm, rounded corners=2pt},
+    sub/.style={rectangle, draw, thick, fill=gray!10,
+                minimum width=4cm, minimum height=1.1cm, rounded corners=2pt},
+    arrow/.style={-{Stealth[length=2mm]}, thick, draw=black!80},
+    branch/.style={-{Stealth[length=2mm]}, thick, draw=black!55}
+]
+
+% Coordinates (mirrors the presentation: cx=0; layered y)
+\coordinate (cx) at (0, 0);
+
+\node[layer] (web) at (0, 5)
+    {\textbf{React Web UI} \\ \scriptsize song picker $\cdot$ playlist results};
+\node[layer] (api) at (0, 3.4)
+    {\textbf{Flask API} \\ \scriptsize \texttt{/api/playlist} $\cdot$ \texttt{/api/compare}};
+
+% M3 (orchestrator) + M4 (mood) side-by-side, both branched from API
+\node[orch] (m3) at (-2.6, 1.4)
+    {\textbf{Module 3:} PlaylistAssembler \\ \scriptsize orchestrator: search, constraints, explanations};
+\node[module] (m4) at (3.4, 1.4)
+    {\textbf{Module 4:} Mood Classifier \\ \scriptsize \emph{optional mood seed}};
+
+% M1 + M2 below M3
+\node[sub] (m1) at (-4.7, -0.7)
+    {\textbf{Module 1} \\ ProbLog KB \\ \scriptsize 11-dim scoring};
+\node[sub] (m2) at (-0.5, -0.7)
+    {\textbf{Module 2} \\ Beam Search \\ \scriptsize bidirectional A*};
+
+% Arrows
+\draw[arrow] (web) -- (api);
+\draw[branch] (api.south) -- ++(0,-0.18) -- (m3.north);
+\draw[branch] (api.south) -- ++(0,-0.18) -- (m4.north);
+\draw[branch] (m3.south) -- ++(0,-0.18) -- (m1.north);
+\draw[branch] (m3.south) -- ++(0,-0.18) -- (m2.north);
+
+\end{tikzpicture}
+\caption{Wave Guide system architecture, reproduced from the live demo. The React frontend posts to the Flask API, which dispatches to Module~3 (PlaylistAssembler, the orchestrator) for playlist generation. Module~3 drives Module~2's bidirectional beam search and uses Module~1's 11-dimension ProbLog knowledge base for per-edge scoring. Module~4 (mood classifier) is an optional path: it supplies a mood seed---either a mood-filtered shortlist for the picker, or a centroid track for direct beam-search seeding (planned).}
+\label{fig:architecture}
+\end{figure}
+

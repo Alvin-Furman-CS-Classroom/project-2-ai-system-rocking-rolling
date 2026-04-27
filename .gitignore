@@ -13,3 +13,7 @@ build/
 *.log
 .idea/
 .vscode/
+*.egg-info/
+modules/*/models/
+!modules/*/models/.gitkeep
+.cache
