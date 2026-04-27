@@ -4,7 +4,7 @@
 
 The implementation diverged from the original proposal in seven concrete ways.
 
-\paragraph{MusicBrainz data source.} The proposal assumed direct use of the public MusicBrainz REST API. The 1~req/sec rate limit proved prohibitive for multi-hop graph traversal, so we deployed a self-hosted Postgres mirror of the MusicBrainz database, which enables batch joins and yields a 2.74$\times$ speedup on relationship queries. The mirror also enabled a canonical song search API that the MusicBrainz REST API does not support: given a track title, the query returns the MBID of the most well-known release (ranked by release date and label prestige), making it substantially more likely that downstream AcousticBrainz and ListenBrainz lookups for that MBID will succeed.
+\paragraph{MusicBrainz data source.} The proposal assumed direct use of the public MusicBrainz REST API. The 1~req/sec rate limit proved prohibitive for multi-hop graph traversal, so we deployed a self-hosted Postgres mirror of the MusicBrainz database, which enables batch joins and yields a 2.74$\times$ speedup on relationship queries. The mirror also enabled a canonical song search API that the MusicBrainz REST API does not support: given a track title, the query returns the MBID of the most well-known release (ranked by release date and label prestige), improving the odds that downstream AcousticBrainz and ListenBrainz lookups succeed.
 
 \paragraph{Audio feature extraction.} The proposal relied solely on AcousticBrainz. Because AcousticBrainz was archived in 2022 and its API is subject to severe throttling, we added an Essentia-based local fallback; Essentia was invoked for approximately 12\% of tracks where AcousticBrainz data was unavailable or too slow to retrieve.
 
@@ -14,6 +14,6 @@ The implementation diverged from the original proposal in seven concrete ways.
 
 \paragraph{Explanations.} The proposal included no explanation layer. We added a three-level explanation system covering per-transition component scores, constraint scorecards, and an auto-generated journey summary.
 
-\paragraph{Mood integration.} The proposal called for mood input to be wired directly into the search algorithm as a search anchor. Module~4 was fully trained, reaching 64.7\% single-split validation accuracy and 65\% mean 5-fold CV accuracy, and its class centroids are exposed via API. However, integrating the centroid as a beam-search anchor proved complex; in the current demo, mood is used only to filter the UI track picker, and the underlying search remains MBID-to-MBID.
+\paragraph{Mood integration.} The proposal called for mood input to be wired directly into the search algorithm as a search anchor. Module~4 was fully trained and its class centroids are exposed via API. However, integrating the centroid as a beam-search anchor proved complex; in the current demo, mood is used only to filter the UI track picker, and the underlying search remains MBID-to-MBID.
 
 The four-module architecture, exclusive use of the MetaBrainz ecosystem, the Flask + React stack, and the constraint-satisfaction approach all remained consistent with the proposal.
