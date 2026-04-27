@@ -9,6 +9,7 @@ The system reads from three open data sources: a self-hosted MusicBrainz~\cite{m
 % System Architecture — matches the diagram from the live demo
 \begin{figure}[ht]
 \centering
+\scalebox{0.7}{
 \begin{tikzpicture}[
     every node/.style={font=\footnotesize, align=center},
     layer/.style={rectangle, draw, thick, fill=white,
@@ -51,6 +52,7 @@ The system reads from three open data sources: a self-hosted MusicBrainz~\cite{m
 \draw[branch] (m3.south) -- ++(0,-0.18) -- (m2.north);
 
 \end{tikzpicture}
+}
 \caption{Wave Guide system architecture, reproduced from the live demo. The React frontend posts to the Flask API, which dispatches to Module~3 (PlaylistAssembler, the orchestrator) for playlist generation. Module~3 drives Module~2's bidirectional beam search and uses Module~1's 11-dimension ProbLog knowledge base for per-edge scoring. Module~4 (mood classifier) is an optional path: it supplies a mood seed---either a mood-filtered shortlist for the picker, or a centroid track for direct beam-search seeding (planned).}
 \label{fig:architecture}
 \end{figure}
